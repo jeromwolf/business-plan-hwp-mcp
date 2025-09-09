@@ -1,0 +1,60 @@
+{
+  "name": "business-plan-hwp-mcp",
+  "version": "0.1.0",
+  "description": "사업계획서 HWP 자동 생성 MCP 서버",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/mcp-server/index.ts",
+    "build": "tsc",
+    "start": "node dist/mcp-server/index.js",
+    "electron": "electron -r tsx/cjs src/electron/main.ts",
+    "electron:dev": "NODE_ENV=development electron -r tsx/cjs src/electron/main.ts",
+    "electron:build": "tsc && electron-builder",
+    "test": "vitest",
+    "test:phase1": "tsx src/tests/run-all-tests.ts",
+    "test:excel": "tsx src/tests/test-excel.ts",
+    "test:encoding": "tsx src/tests/test-encoding.ts",
+    "lint": "eslint src/**/*.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "docx": "^9.5.1",
+    "iconv-lite": "^0.6.3",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "sharp": "^0.33.0",
+    "uuid": "^13.0.0",
+    "winston": "^3.11.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.13.5",
+    "@swc/helpers": "^0.5.17",
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.12",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^8.54.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

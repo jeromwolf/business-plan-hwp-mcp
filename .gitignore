@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+out/
+*.js
+*.js.map
+*.d.ts
+!src/gui/preload.js
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.nyc_output
+
+# Electron
+electron-builder.yml
+dist_electron/
+
+# Temporary files
+tmp/
+temp/
+cache/
+*.tmp
+*.temp
+
+# HWP files (for testing)
+*.hwp
+*.hwpx
+!assets/samples/*.hwp
+!tests/fixtures/*.hwp
+
+# Excel files (for testing)
+*.xlsx
+*.xls
+!assets/samples/*.xlsx
+!tests/fixtures/*.xlsx

@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-09-09T11:48:12.664Z",
+  "platform": "darwin",
+  "node": "v24.7.0",
+  "results": [
+    {
+      "category": "HWP 처리",
+      "tests": [
+        {
+          "name": "HWP 파싱",
+          "passed": false,
+          "message": "hwp.js 라이브러리 필요"
+        },
+        {
+          "name": "HWPX 처리",
+          "passed": false,
+          "message": "HWPX 미지원"
+        }
+      ],
+      "overall": false
+    },
+    {
+      "category": "Excel 처리",
+      "tests": [
+        {
+          "name": "Excel 읽기",
+          "passed": true,
+          "message": "Excel 읽기 성공"
+        },
+        {
+          "name": "셀 병합",
+          "passed": true,
+          "message": "셀 병합 처리 가능"
+        },
+        {
+          "name": "데이터 타입",
+          "passed": true,
+          "message": "모든 데이터 타입 처리 가능"
+        },
+        {
+          "name": "성능 (1000행)",
+          "passed": true,
+          "message": "성능 테스트 완료 (10ms)"
+        }
+      ],
+      "overall": true
+    },
+    {
+      "category": "인코딩 처리",
+      "tests": [
+        {
+          "name": "인코딩 변환",
+          "passed": true,
+          "message": "특수문자 변환 성공"
+        },
+        {
+          "name": "자동 감지",
+          "passed": true,
+          "message": "인코딩 자동 감지 작동"
+        },
+        {
+          "name": "성능",
+          "passed": true,
+          "message": "1초 이내 처리"
+        }
+      ],
+      "overall": true
+    }
+  ],
+  "decision": "GO"
+}

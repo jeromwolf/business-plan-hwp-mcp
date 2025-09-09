@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Plan HWP MCP - AI 자동화 도구</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .left-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+        
+        .right-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .template-card {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            margin-bottom: 10px;
+        }
+        
+        .template-card:hover, .template-card.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+        
+        .template-card h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .template-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea.input-field {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e6f0ff;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .preview-area {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            border: 1px solid #e9ecef;
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .preview-content {
+            line-height: 1.8;
+            color: #333;
+        }
+        
+        .preview-content h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .preview-content h2 {
+            color: #34495e;
+            margin: 25px 0 15px 0;
+        }
+        
+        .preview-content h3 {
+            color: #555;
+            margin: 20px 0 10px 0;
+        }
+        
+        .preview-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .preview-content th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .preview-content td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        
+        .progress-indicator {
+            background: #e9ecef;
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .status-message {
+            text-align: center;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .file-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .ai-chat-area {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .conversion-info {
+            background: #fffacd;
+            padding: 15px;
+            border-left: 4px solid #f39c12;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Business Plan HWP MCP</h1>
+            <p>AI 기반 사업계획서 자동화 도구</p>
+        </div>
+        
+        <div class="main-layout">
+            <!-- 좌측 패널: 설정 및 입력 -->
+            <div class="left-panel">
+                <!-- 1. 템플릿 선택 -->
+                <div class="section">
+                    <h3>📋 사업계획서 템플릿</h3>
+                    <div class="template-selector">
+                        <div class="template-card active" data-template="government">
+                            <h4>정부지원사업</h4>
+                            <p>중소벤처기업부, K-스타트업 등 정부지원사업 신청용</p>
+                        </div>
+                        <div class="template-card" data-template="vc">
+                            <h4>VC 투자 유치</h4>
+                            <p>벤처캐피털 투자 유치를 위한 사업계획서</p>
+                        </div>
+                        <div class="template-card" data-template="bank">
+                            <h4>은행 대출</h4>
+                            <p>창업지원금, 사업자금 대출 신청용</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2. 기본 정보 입력 -->
+                <div class="section">
+                    <h3>🏢 기본 정보</h3>
+                    <input type="text" id="companyName" class="input-field" placeholder="회사명" value="㈜테크스타트">
+                    <input type="text" id="businessItem" class="input-field" placeholder="사업 아이템" value="AI 기반 스마트팜 솔루션">
+                    <input type="text" id="ceoName" class="input-field" placeholder="대표자명" value="김철수">
+                    <select id="industry" class="input-field">
+                        <option>IT/소프트웨어</option>
+                        <option>제조업</option>
+                        <option>서비스업</option>
+                        <option>바이오/헬스케어</option>
+                    </select>
+                    <textarea id="businessContent" class="input-field" placeholder="사업 내용을 입력하세요...">①혁신적인 AI 기술 개발
+②빅데이터 분석 서비스
+③클라우드 솔루션 제공™</textarea>
+                </div>
+                
+                <!-- 3. Excel 데이터 업로드 -->
+                <div class="section">
+                    <h3>📊 Excel 데이터</h3>
+                    <div class="upload-area" onclick="document.getElementById('excel-upload').click()">
+                        <p>📄 Excel 파일을 드래그하거나 클릭하세요</p>
+                        <small>재무제표, 시장분석 데이터 등</small>
+                    </div>
+                    <input type="file" id="excel-upload" accept=".xlsx,.xls" multiple style="display: none;">
+                    <div class="file-list" id="excel-files"></div>
+                </div>
+                
+                <!-- 4. 이미지 업로드 -->
+                <div class="section">
+                    <h3>🖼️ 이미지 자료</h3>
+                    <div class="upload-area" onclick="document.getElementById('image-upload').click()">
+                        <p>🖼️ 이미지 파일을 드래그하거나 클릭하세요</p>
+                        <small>제품 스크린샷, 차트, 다이어그램</small>
+                    </div>
+                    <input type="file" id="image-upload" accept="image/*" multiple style="display: none;">
+                    <div class="file-list" id="image-files"></div>
+                </div>
+                
+                <!-- 5. AI 대화 영역 -->
+                <div class="section">
+                    <h3>🤖 AI 수정 요청</h3>
+                    <div class="ai-chat-area">
+                        <textarea class="input-field" id="aiRequest" placeholder="예: '재무제표를 더 상세하게 작성해주세요' 또는 '마케팅 전략 부분을 수정해주세요'"></textarea>
+                    </div>
+                </div>
+                
+                <!-- 6. 실행 버튼 -->
+                <div class="section">
+                    <button class="btn" id="generateBtn" onclick="generateBusinessPlan()">
+                        🚀 사업계획서 생성하기
+                    </button>
+                    <button class="btn btn-success" id="downloadBtn" onclick="downloadDocument()" disabled>
+                        📥 HWP 호환 문서 다운로드
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 우측 패널: 미리보기 및 결과 -->
+            <div class="right-panel">
+                <!-- 진행 상태 -->
+                <div class="progress-indicator">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="status-message status-info" id="statusMessage">
+                    준비 중... 정보를 입력하고 생성 버튼을 클릭하세요.
+                </div>
+                
+                <!-- 미리보기 영역 -->
+                <div class="preview-area">
+                    <div class="preview-content" id="previewContent">
+                        <h1>사업계획서 미리보기</h1>
+                        <p>왼쪽 패널에서 정보를 입력하고 '사업계획서 생성하기' 버튼을 클릭하면 여기에 결과가 표시됩니다.</p>
+                        
+                        <div class="conversion-info">
+                            <h3>✨ 자동 변환 기능</h3>
+                            <p>• ㈜ → (주) 자동 변환</p>
+                            <p>• ①②③ → (1)(2)(3) 자동 변환</p>
+                            <p>• 특수문자 완벽 호환</p>
+                            <p>• Excel 데이터 자동 표 변환</p>
+                            <p>• 이미지 자동 삽입</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 특수문자 변환 맵
+        const charMap = {
+            '㈜': '(주)',
+            '㈏': '(가)', '㈐': '(나)', '㈑': '(다)',
+            '①': '(1)', '②': '(2)', '③': '(3)', '④': '(4)', '⑤': '(5)',
+            '⑥': '(6)', '⑦': '(7)', '⑧': '(8)', '⑨': '(9)', '⑩': '(10)',
+            '™': 'TM', '®': '(R)', '©': '(C)',
+            '₩': '원', '¥': '엔', '€': '유로'
+        };
+        
+        function convertSpecialChars(text) {
+            let converted = text;
+            for (const [from, to] of Object.entries(charMap)) {
+                converted = converted.replace(new RegExp(from, 'g'), to);
+            }
+            return converted;
+        }
+        
+        // 템플릿 선택
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+            });
+        });
+        
+        // 파일 업로드 처리
+        document.getElementById('excel-upload').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const fileList = document.getElementById('excel-files');
+            fileList.innerHTML = '';
+            
+            for (let file of files) {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight: 500;">${file.name}</div>
+                        <div style="font-size: 0.8em; color: #666;">${(file.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                    <button onclick="this.parentElement.remove()" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">삭제</button>
+                `;
+                fileList.appendChild(item);
+            }
+        });
+        
+        document.getElementById('image-upload').addEventListener('change', function(e) {
+            const files = e.target.files;
+            const fileList = document.getElementById('image-files');
+            fileList.innerHTML = '';
+            
+            for (let file of files) {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight: 500;">${file.name}</div>
+                        <div style="font-size: 0.8em; color: #666;">${(file.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                    <button onclick="this.parentElement.remove()" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">삭제</button>
+                `;
+                fileList.appendChild(item);
+            }
+        });
+        
+        // 드래그 앤 드롭
+        document.querySelectorAll('.upload-area').forEach(area => {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                // 파일 처리 로직
+            });
+        });
+        
+        // 사업계획서 생성
+        function generateBusinessPlan() {
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progressBar = document.getElementById('progressBar');
+            const statusMessage = document.getElementById('statusMessage');
+            const previewContent = document.getElementById('previewContent');
+            
+            // 입력 데이터 수집
+            const data = {
+                template: document.querySelector('.template-card.active').dataset.template,
+                company: document.getElementById('companyName').value,
+                businessItem: document.getElementById('businessItem').value,
+                ceo: document.getElementById('ceoName').value,
+                industry: document.getElementById('industry').value,
+                content: document.getElementById('businessContent').value,
+                aiRequest: document.getElementById('aiRequest').value
+            };
+            
+            // 원본 저장
+            data.originalCompany = data.company;
+            
+            // 특수문자 변환
+            data.company = convertSpecialChars(data.company);
+            data.businessItem = convertSpecialChars(data.businessItem);
+            data.ceo = convertSpecialChars(data.ceo);
+            data.content = convertSpecialChars(data.content);
+            
+            // 버튼 상태 변경
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="loading"></span>생성 중...';
+            
+            // 진행 상태 업데이트
+            statusMessage.innerHTML = '📝 AI가 사업계획서를 작성 중입니다...';
+            
+            // 진행률 애니메이션
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                progressBar.style.width = progress + '%';
+                
+                // 단계별 메시지
+                if (progress < 25) {
+                    statusMessage.innerHTML = '📝 기본 정보 분석 중... (1/4)';
+                } else if (progress < 50) {
+                    statusMessage.innerHTML = '📊 데이터 처리 중... (2/4)';
+                } else if (progress < 75) {
+                    statusMessage.innerHTML = '🤖 AI 문서 생성 중... (3/4)';
+                } else if (progress < 100) {
+                    statusMessage.innerHTML = '✨ 최종 검토 중... (4/4)';
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    // 문서 생성
+                    const html = generateDocument(data);
+                    previewContent.innerHTML = html;
+                    
+                    // 완료 상태
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '✅ 생성 완료';
+                    downloadBtn.disabled = false;
+                    
+                    statusMessage.className = 'status-message status-success';
+                    statusMessage.innerHTML = '✅ 사업계획서가 성공적으로 생성되었습니다!';
+                    
+                    // 데이터 저장
+                    window.generatedDocument = {
+                        data: data,
+                        html: html
+                    };
+                }
+            }, 200);
+        }
+        
+        // 문서 생성
+        function generateDocument(data) {
+            const templates = {
+                government: () => `
+                    <h1>${data.businessItem} 사업계획서</h1>
+                    
+                    <h2>1. 사업 개요</h2>
+                    <table>
+                        <tr><th width="30%">회사명</th><td>${data.company}</td></tr>
+                        <tr><th>대표자</th><td>${data.ceo}</td></tr>
+                        <tr><th>사업 아이템</th><td>${data.businessItem}</td></tr>
+                        <tr><th>업종</th><td>${data.industry}</td></tr>
+                    </table>
+                    
+                    <h2>2. 사업 내용</h2>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                    </div>
+                    
+                    <h2>3. 시장 분석</h2>
+                    <h3>3.1 시장 규모</h3>
+                    <p>국내 ${data.industry} 시장은 2023년 기준 약 1.2조원 규모이며, 연평균 15% 성장하여 2027년까지 2.1조원 규모로 확대될 전망입니다.</p>
+                    
+                    <table>
+                        <tr>
+                            <th>연도</th>
+                            <th>시장 규모</th>
+                            <th>성장률</th>
+                        </tr>
+                        <tr>
+                            <td>2023년</td>
+                            <td>1.2조원</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>2024년</td>
+                            <td>1.4조원</td>
+                            <td>16.7%</td>
+                        </tr>
+                        <tr>
+                            <td>2025년(예상)</td>
+                            <td>1.6조원</td>
+                            <td>14.3%</td>
+                        </tr>
+                    </table>
+                    
+                    <h3>3.2 경쟁 분석</h3>
+                    <p>주요 경쟁사 대비 우리의 강점은 AI 기술력과 맞춤형 솔루션 제공 능력입니다.</p>
+                    
+                    <h2>4. 기술 개발 계획</h2>
+                    <ul>
+                        <li>1단계: 핵심 기술 개발 및 프로토타입 제작</li>
+                        <li>2단계: 파일럿 테스트 및 피드백 반영</li>
+                        <li>3단계: 상용화 및 시장 출시</li>
+                    </ul>
+                    
+                    <h2>5. 재무 계획</h2>
+                    <table>
+                        <tr>
+                            <th>구분</th>
+                            <th>1차년도</th>
+                            <th>2차년도</th>
+                            <th>3차년도</th>
+                        </tr>
+                        <tr>
+                            <td>매출</td>
+                            <td>10억원</td>
+                            <td>25억원</td>
+                            <td>50억원</td>
+                        </tr>
+                        <tr>
+                            <td>영업이익</td>
+                            <td>2억원</td>
+                            <td>7억원</td>
+                            <td>15억원</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="conversion-info">
+                        <h3>변환 정보</h3>
+                        <p><strong>원본:</strong> ${data.originalCompany}</p>
+                        <p><strong>변환:</strong> ${data.company}</p>
+                        <p>모든 특수문자가 자동으로 변환되었습니다.</p>
+                    </div>
+                `,
+                
+                vc: () => `
+                    <h1>${data.company} 투자 제안서</h1>
+                    
+                    <h2>Executive Summary</h2>
+                    <p>${data.businessItem}을 통해 ${data.industry} 시장을 혁신하고자 합니다.</p>
+                    
+                    <h2>Problem & Solution</h2>
+                    <p><strong>문제:</strong> 기존 솔루션의 한계와 시장의 미충족 니즈</p>
+                    <p><strong>해결책:</strong> ${data.businessItem}</p>
+                    
+                    <h2>Market Opportunity</h2>
+                    <p>TAM: 100조원 / SAM: 10조원 / SOM: 1조원</p>
+                    
+                    <h2>Business Model</h2>
+                    ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                    
+                    <h2>Investment Ask</h2>
+                    <ul>
+                        <li>투자 규모: 50억원</li>
+                        <li>밸류에이션: 200억원</li>
+                        <li>투자금 사용처: 기술개발 70%, 마케팅 30%</li>
+                    </ul>
+                `,
+                
+                bank: () => `
+                    <h1>${data.company} 대출 신청서</h1>
+                    
+                    <h2>1. 기업 개요</h2>
+                    <table>
+                        <tr><th>회사명</th><td>${data.company}</td></tr>
+                        <tr><th>대표자</th><td>${data.ceo}</td></tr>
+                        <tr><th>사업 내용</th><td>${data.businessItem}</td></tr>
+                    </table>
+                    
+                    <h2>2. 자금 용도</h2>
+                    ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                    
+                    <h2>3. 상환 계획</h2>
+                    <p>3년 거치 5년 분할 상환</p>
+                `
+            };
+            
+            return templates[data.template]();
+        }
+        
+        // 문서 다운로드
+        function downloadDocument() {
+            if (!window.generatedDocument) return;
+            
+            const { data, html } = window.generatedDocument;
+            
+            const fullHtml = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사업계획서 - ${data.company}</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        body {
+            font-family: '맑은 고딕', sans-serif;
+            line-height: 1.8;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            page-break-after: avoid;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            page-break-after: avoid;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .conversion-info {
+            background: #fffacd;
+            padding: 15px;
+            border-left: 4px solid #f39c12;
+            margin: 30px 0;
+            border-radius: 5px;
+        }
+        @media print {
+            body { margin: 0; }
+            .conversion-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    ${html}
+    <div style="margin-top: 50px; text-align: center; color: #666;">
+        <p>작성일: ${new Date().toLocaleDateString('ko-KR')}</p>
+        <p>Business Plan HWP MCP로 자동 생성</p>
+    </div>
+</body>
+</html>`;
+            
+            const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `사업계획서_${data.company}_${new Date().toISOString().slice(0, 10)}.html`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

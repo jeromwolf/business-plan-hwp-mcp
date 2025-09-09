@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사업계획서 자동 변환기</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: '맑은 고딕', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+        .result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .box {
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .box h4 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .download-btn {
+            background: #28a745;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 사업계획서 자동 변환기</h1>
+        
+        <div class="input-group">
+            <label>회사명</label>
+            <input type="text" id="companyName" value="㈜테크스타트" placeholder="예: ㈜테크스타트">
+        </div>
+        
+        <div class="input-group">
+            <label>대표자</label>
+            <input type="text" id="ceoName" value="김철수" placeholder="예: 홍길동">
+        </div>
+        
+        <div class="input-group">
+            <label>사업 내용</label>
+            <textarea id="businessContent" placeholder="사업 내용을 입력하세요...">①혁신적인 AI 기술 개발
+②빅데이터 분석 서비스
+③클라우드 솔루션 제공™</textarea>
+        </div>
+        
+        <button class="btn" onclick="convertDocument()">🚀 자동 변환 시작</button>
+        
+        <div class="result" id="result">
+            <h3>✅ 변환 완료!</h3>
+            <div class="before-after">
+                <div class="box">
+                    <h4>변환 전</h4>
+                    <div id="beforeText"></div>
+                </div>
+                <div class="box">
+                    <h4>변환 후</h4>
+                    <div id="afterText"></div>
+                </div>
+            </div>
+            <button class="btn download-btn" onclick="downloadDoc()">📥 문서 다운로드 (HTML)</button>
+        </div>
+    </div>
+    
+    <script>
+        function convertSpecialChars(text) {
+            const charMap = {
+                '㈜': '(주)',
+                '㈏': '(가)',
+                '㈐': '(나)',
+                '①': '(1)', '②': '(2)', '③': '(3)', '④': '(4)', '⑤': '(5)',
+                '⑥': '(6)', '⑦': '(7)', '⑧': '(8)', '⑨': '(9)', '⑩': '(10)',
+                '™': 'TM', '®': '(R)', '©': '(C)',
+                '₩': '원', '¥': '엔', '€': '유로'
+            };
+            
+            let converted = text;
+            for (const [from, to] of Object.entries(charMap)) {
+                converted = converted.replace(new RegExp(from, 'g'), to);
+            }
+            return converted;
+        }
+        
+        function convertDocument() {
+            const company = document.getElementById('companyName').value;
+            const ceo = document.getElementById('ceoName').value;
+            const content = document.getElementById('businessContent').value;
+            
+            const convertedCompany = convertSpecialChars(company);
+            const convertedContent = convertSpecialChars(content);
+            
+            // 결과 표시
+            document.getElementById('beforeText').innerHTML = 
+                `회사: ${company}<br>내용: ${content.replace(/\n/g, '<br>')}`;
+            document.getElementById('afterText').innerHTML = 
+                `회사: ${convertedCompany}<br>내용: ${convertedContent.replace(/\n/g, '<br>')}`;
+            
+            document.getElementById('result').classList.add('show');
+            
+            // 문서 데이터 저장
+            window.documentData = {
+                company: convertedCompany,
+                ceo: ceo,
+                content: convertedContent,
+                original: { company, content }
+            };
+        }
+        
+        function downloadDoc() {
+            if (!window.documentData) return;
+            
+            const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사업계획서 - ${window.documentData.company}</title>
+    <style>
+        body { font-family: '맑은 고딕'; max-width: 800px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <h1>사업계획서</h1>
+    <h2>회사 정보</h2>
+    <table>
+        <tr><th>회사명</th><td>${window.documentData.company}</td></tr>
+        <tr><th>대표자</th><td>${window.documentData.ceo}</td></tr>
+    </table>
+    <h2>사업 내용</h2>
+    <p>${window.documentData.content.replace(/\n/g, '<br>')}</p>
+    <div style="margin-top: 50px; padding: 20px; background: #f0f4ff;">
+        <strong>변환 정보:</strong><br>
+        원본: ${window.documentData.original.company}<br>
+        변환: ${window.documentData.company}<br>
+        특수문자가 모두 자동 변환되었습니다.
+    </div>
+</body>
+</html>`;
+            
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `사업계획서_${window.documentData.company}.html`;
+            a.click();
+        }
+    </script>
+</body>
+</html>

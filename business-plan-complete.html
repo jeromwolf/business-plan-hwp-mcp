@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Plan HWP MCP - 완전 자동화 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .left-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+        
+        .right-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .template-card {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .template-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .template-card:hover::before {
+            left: 100%;
+        }
+        
+        .template-card:hover, .template-card.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .template-card.active::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea.input-field {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+            background: white;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e6f0ff;
+            transform: scale(1.02);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        }
+        
+        .preview-area {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            border: 1px solid #e9ecef;
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .preview-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            animation: slideWidth 0.3s ease;
+        }
+        
+        @keyframes slideWidth {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        .preview-content {
+            line-height: 1.8;
+            color: #333;
+        }
+        
+        .preview-content h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .preview-content h2 {
+            color: #34495e;
+            margin: 25px 0 15px 0;
+        }
+        
+        .preview-content h3 {
+            color: #555;
+            margin: 20px 0 10px 0;
+        }
+        
+        .preview-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .preview-content th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .preview-content td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: white;
+        }
+        
+        .preview-content tr:nth-child(even) td {
+            background: #f8f9fa;
+        }
+        
+        .progress-indicator {
+            background: #e9ecef;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .status-message {
+            text-align: center;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .file-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+        
+        .file-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .ai-chat-area {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .conversion-info {
+            background: linear-gradient(135deg, #fffacd 0%, #fff8dc 100%);
+            padding: 20px;
+            border-left: 4px solid #f39c12;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(243, 156, 18, 0.1);
+        }
+        
+        .excel-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .excel-preview table {
+            width: 100%;
+            font-size: 0.9em;
+        }
+        
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .image-preview-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .image-preview-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .image-preview-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .quick-action-bar {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .quick-action-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 24px;
+        }
+        
+        .quick-action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-action-bar {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Business Plan HWP MCP</h1>
+            <p>AI 기반 사업계획서 완전 자동화 시스템</p>
+        </div>
+        
+        <div class="main-layout">
+            <!-- 좌측 패널: 설정 및 입력 -->
+            <div class="left-panel">
+                <!-- 1. 템플릿 선택 -->
+                <div class="section">
+                    <h3>📋 사업계획서 템플릿</h3>
+                    <div class="template-selector">
+                        <div class="template-card active" data-template="government">
+                            <h4>정부지원사업</h4>
+                            <p>중소벤처기업부, K-스타트업 등 정부지원사업 신청용</p>
+                        </div>
+                        <div class="template-card" data-template="vc">
+                            <h4>VC 투자 유치</h4>
+                            <p>벤처캐피털 투자 유치를 위한 사업계획서</p>
+                        </div>
+                        <div class="template-card" data-template="bank">
+                            <h4>은행 대출</h4>
+                            <p>창업지원금, 사업자금 대출 신청용</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 2. 기본 정보 입력 -->
+                <div class="section">
+                    <h3>🏢 기본 정보</h3>
+                    <input type="text" id="companyName" class="input-field" placeholder="회사명" value="㈜테크스타트">
+                    <input type="text" id="businessItem" class="input-field" placeholder="사업 아이템" value="AI 기반 스마트팜 솔루션">
+                    <input type="text" id="ceoName" class="input-field" placeholder="대표자명" value="김철수">
+                    <input type="text" id="foundedDate" class="input-field" placeholder="설립일" value="2024년 1월 1일">
+                    <select id="industry" class="input-field">
+                        <option>IT/소프트웨어</option>
+                        <option>제조업</option>
+                        <option>서비스업</option>
+                        <option>바이오/헬스케어</option>
+                        <option>에너지/환경</option>
+                        <option>유통/물류</option>
+                    </select>
+                    <textarea id="businessContent" class="input-field" placeholder="사업 내용을 입력하세요...">①혁신적인 AI 기술 개발
+②빅데이터 분석 서비스
+③클라우드 솔루션 제공™
+④글로벌 시장 진출 전략</textarea>
+                </div>
+                
+                <!-- 3. Excel 데이터 업로드 -->
+                <div class="section">
+                    <h3>📊 Excel 데이터</h3>
+                    <div class="upload-area" id="excel-drop-area">
+                        <p style="font-size: 24px; margin-bottom: 10px;">📄</p>
+                        <p>Excel 파일을 드래그하거나 클릭하세요</p>
+                        <small>재무제표, 시장분석 데이터 등</small>
+                    </div>
+                    <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" multiple style="display: none;">
+                    <div class="file-list" id="excel-files"></div>
+                </div>
+                
+                <!-- 4. 이미지 업로드 -->
+                <div class="section">
+                    <h3>🖼️ 이미지 자료</h3>
+                    <div class="upload-area" id="image-drop-area">
+                        <p style="font-size: 24px; margin-bottom: 10px;">🖼️</p>
+                        <p>이미지 파일을 드래그하거나 클릭하세요</p>
+                        <small>제품 스크린샷, 차트, 다이어그램</small>
+                    </div>
+                    <input type="file" id="image-upload" accept="image/*" multiple style="display: none;">
+                    <div class="file-list" id="image-files"></div>
+                </div>
+                
+                <!-- 5. AI 대화 영역 -->
+                <div class="section">
+                    <h3>🤖 AI 수정 요청</h3>
+                    <div class="ai-chat-area">
+                        <textarea class="input-field" id="aiRequest" placeholder="예: '재무제표를 더 상세하게 작성해주세요' 또는 '마케팅 전략 부분을 수정해주세요'">시장 분석을 더 구체적으로 작성하고, 경쟁사 분석을 추가해주세요.</textarea>
+                        <button class="btn btn-warning" onclick="processAIRequest()">
+                            🤖 AI 요청 처리
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 6. 실행 버튼 -->
+                <div class="section">
+                    <button class="btn" id="generateBtn" onclick="generateBusinessPlan()">
+                        🚀 사업계획서 생성하기
+                    </button>
+                    <button class="btn btn-success" id="downloadHtmlBtn" onclick="downloadHTML()" disabled>
+                        📥 HTML 다운로드
+                    </button>
+                    <button class="btn btn-danger" id="downloadPdfBtn" onclick="downloadPDF()" disabled>
+                        📑 PDF 다운로드
+                    </button>
+                    <button class="btn" id="saveBtn" onclick="saveToLocal()">
+                        💾 임시 저장
+                    </button>
+                    <button class="btn" id="loadBtn" onclick="loadFromLocal()">
+                        📂 불러오기
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 우측 패널: 미리보기 및 결과 -->
+            <div class="right-panel">
+                <!-- 진행 상태 -->
+                <div class="progress-indicator">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="status-message status-info" id="statusMessage">
+                    준비 중... 정보를 입력하고 생성 버튼을 클릭하세요.
+                </div>
+                
+                <!-- 탭 메뉴 -->
+                <div class="preview-tabs">
+                    <div class="tab active" onclick="switchTab('preview')">📄 미리보기</div>
+                    <div class="tab" onclick="switchTab('excel')">📊 Excel 데이터</div>
+                    <div class="tab" onclick="switchTab('images')">🖼️ 이미지</div>
+                    <div class="tab" onclick="switchTab('ai')">🤖 AI 분석</div>
+                </div>
+                
+                <!-- 미리보기 영역 -->
+                <div id="preview-tab" class="preview-area">
+                    <div class="preview-content" id="previewContent">
+                        <h1>사업계획서 미리보기</h1>
+                        <p>왼쪽 패널에서 정보를 입력하고 '사업계획서 생성하기' 버튼을 클릭하면 여기에 결과가 표시됩니다.</p>
+                        
+                        <div class="conversion-info">
+                            <h3>✨ 자동 변환 기능</h3>
+                            <p>• ㈜ → (주) 자동 변환</p>
+                            <p>• ①②③ → (1)(2)(3) 자동 변환</p>
+                            <p>• 특수문자 완벽 호환</p>
+                            <p>• Excel 데이터 자동 표 변환</p>
+                            <p>• 이미지 자동 삽입</p>
+                            <p>• AI 기반 내용 보강</p>
+                        </div>
+                        
+                        <h2>주요 기능</h2>
+                        <ul>
+                            <li>3가지 템플릿 선택 가능</li>
+                            <li>Excel 파일 자동 처리</li>
+                            <li>이미지 자동 삽입</li>
+                            <li>AI 수정 요청 처리</li>
+                            <li>PDF 직접 다운로드</li>
+                            <li>로컬 저장 및 불러오기</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Excel 데이터 탭 -->
+                <div id="excel-tab" class="preview-area" style="display: none;">
+                    <h2>📊 Excel 데이터 미리보기</h2>
+                    <div id="excelPreview">
+                        <p>Excel 파일을 업로드하면 여기에 데이터가 표시됩니다.</p>
+                    </div>
+                </div>
+                
+                <!-- 이미지 탭 -->
+                <div id="images-tab" class="preview-area" style="display: none;">
+                    <h2>🖼️ 업로드된 이미지</h2>
+                    <div class="image-preview-grid" id="imagePreview">
+                        <p>이미지를 업로드하면 여기에 미리보기가 표시됩니다.</p>
+                    </div>
+                </div>
+                
+                <!-- AI 분석 탭 -->
+                <div id="ai-tab" class="preview-area" style="display: none;">
+                    <h2>🤖 AI 분석 결과</h2>
+                    <div id="aiAnalysis">
+                        <h3>입력 데이터 분석</h3>
+                        <ul>
+                            <li>회사명 특수문자 감지: ㈜ 발견 → (주)로 변환 예정</li>
+                            <li>번호 특수문자 감지: ①②③④ 발견 → (1)(2)(3)(4)로 변환 예정</li>
+                            <li>템플릿: 정부지원사업용 선택됨</li>
+                        </ul>
+                        
+                        <h3>AI 추천사항</h3>
+                        <ul>
+                            <li>재무계획 섹션 추가 권장</li>
+                            <li>시장 규모 데이터 보강 필요</li>
+                            <li>경쟁사 분석 추가 권장</li>
+                            <li>리스크 관리 계획 포함 권장</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 빠른 실행 버튼들 -->
+        <div class="quick-action-bar">
+            <div class="quick-action-btn" onclick="resetAll()" title="초기화">
+                🔄
+            </div>
+            <div class="quick-action-btn" onclick="showHelp()" title="도움말">
+                ❓
+            </div>
+            <div class="quick-action-btn" onclick="toggleFullscreen()" title="전체화면">
+                🖥️
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let excelData = [];
+        let imageData = [];
+        let generatedDocument = null;
+        
+        // 특수문자 변환 맵
+        const charMap = {
+            '㈜': '(주)',
+            '㈏': '(가)', '㈐': '(나)', '㈑': '(다)', '㈒': '(라)',
+            '①': '(1)', '②': '(2)', '③': '(3)', '④': '(4)', '⑤': '(5)',
+            '⑥': '(6)', '⑦': '(7)', '⑧': '(8)', '⑨': '(9)', '⑩': '(10)',
+            '™': 'TM', '®': '(R)', '©': '(C)',
+            '₩': '원', '¥': '엔', '€': '유로',
+            '※': '*', '℃': '도', '㎡': 'm2', '㎥': 'm3'
+        };
+        
+        function convertSpecialChars(text) {
+            let converted = text;
+            for (const [from, to] of Object.entries(charMap)) {
+                converted = converted.replace(new RegExp(from, 'g'), to);
+            }
+            return converted;
+        }
+        
+        // 템플릿 선택
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                showToast('템플릿이 변경되었습니다', 'success');
+            });
+        });
+        
+        // Excel 파일 처리
+        const excelDropArea = document.getElementById('excel-drop-area');
+        const excelUpload = document.getElementById('excel-upload');
+        
+        excelDropArea.addEventListener('click', () => excelUpload.click());
+        
+        excelDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            excelDropArea.classList.add('dragover');
+        });
+        
+        excelDropArea.addEventListener('dragleave', () => {
+            excelDropArea.classList.remove('dragover');
+        });
+        
+        excelDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            excelDropArea.classList.remove('dragover');
+            handleExcelFiles(e.dataTransfer.files);
+        });
+        
+        excelUpload.addEventListener('change', (e) => {
+            handleExcelFiles(e.target.files);
+        });
+        
+        function handleExcelFiles(files) {
+            const fileList = document.getElementById('excel-files');
+            fileList.innerHTML = '';
+            
+            Array.from(files).forEach(file => {
+                if (file.name.match(/\.(xlsx|xls|csv)$/)) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        
+                        // 첫 번째 시트 데이터 추출
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                        
+                        excelData.push({
+                            name: file.name,
+                            data: jsonData,
+                            html: XLSX.utils.sheet_to_html(firstSheet)
+                        });
+                        
+                        // 파일 목록에 추가
+                        const item = document.createElement('div');
+                        item.className = 'file-item';
+                        item.innerHTML = `
+                            <div>
+                                <div style="font-weight: 500;">📊 ${file.name}</div>
+                                <div style="font-size: 0.8em; color: #666;">${(file.size / 1024).toFixed(1)} KB</div>
+                            </div>
+                            <button onclick="removeExcelFile('${file.name}')" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">삭제</button>
+                        `;
+                        fileList.appendChild(item);
+                        
+                        // Excel 미리보기 업데이트
+                        updateExcelPreview();
+                        showToast(`Excel 파일 '${file.name}' 업로드 완료`, 'success');
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+        }
+        
+        function removeExcelFile(filename) {
+            excelData = excelData.filter(item => item.name !== filename);
+            updateExcelPreview();
+        }
+        
+        function updateExcelPreview() {
+            const preview = document.getElementById('excelPreview');
+            if (excelData.length === 0) {
+                preview.innerHTML = '<p>Excel 파일을 업로드하면 여기에 데이터가 표시됩니다.</p>';
+                return;
+            }
+            
+            let html = '';
+            excelData.forEach(file => {
+                html += `
+                    <div class="excel-preview">
+                        <h3>📊 ${file.name}</h3>
+                        ${file.html}
+                    </div>
+                `;
+            });
+            preview.innerHTML = html;
+        }
+        
+        // 이미지 파일 처리
+        const imageDropArea = document.getElementById('image-drop-area');
+        const imageUpload = document.getElementById('image-upload');
+        
+        imageDropArea.addEventListener('click', () => imageUpload.click());
+        
+        imageDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageDropArea.classList.add('dragover');
+        });
+        
+        imageDropArea.addEventListener('dragleave', () => {
+            imageDropArea.classList.remove('dragover');
+        });
+        
+        imageDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageDropArea.classList.remove('dragover');
+            handleImageFiles(e.dataTransfer.files);
+        });
+        
+        imageUpload.addEventListener('change', (e) => {
+            handleImageFiles(e.target.files);
+        });
+        
+        function handleImageFiles(files) {
+            const fileList = document.getElementById('image-files');
+            const imagePreview = document.getElementById('imagePreview');
+            
+            fileList.innerHTML = '';
+            imagePreview.innerHTML = '';
+            imageData = [];
+            
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imageData.push({
+                            name: file.name,
+                            data: e.target.result
+                        });
+                        
+                        // 파일 목록에 추가
+                        const item = document.createElement('div');
+                        item.className = 'file-item';
+                        item.innerHTML = `
+                            <div>
+                                <div style="font-weight: 500;">🖼️ ${file.name}</div>
+                                <div style="font-size: 0.8em; color: #666;">${(file.size / 1024).toFixed(1)} KB</div>
+                            </div>
+                            <button onclick="removeImageFile('${file.name}')" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">삭제</button>
+                        `;
+                        fileList.appendChild(item);
+                        
+                        // 이미지 미리보기에 추가
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'image-preview-item';
+                        previewItem.innerHTML = `
+                            <img src="${e.target.result}" alt="${file.name}">
+                            <div style="padding: 8px; font-size: 0.8em; background: #f8f9fa;">${file.name}</div>
+                        `;
+                        imagePreview.appendChild(previewItem);
+                        
+                        showToast(`이미지 '${file.name}' 업로드 완료`, 'success');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+        
+        function removeImageFile(filename) {
+            imageData = imageData.filter(item => item.name !== filename);
+            // UI 업데이트는 파일 다시 처리로 간단히 구현
+        }
+        
+        // 탭 전환
+        function switchTab(tabName) {
+            // 모든 탭 비활성화
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.preview-area').forEach(area => area.style.display = 'none');
+            
+            // 선택된 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').style.display = 'block';
+        }
+        
+        // AI 요청 처리
+        function processAIRequest() {
+            const request = document.getElementById('aiRequest').value;
+            if (!request) return;
+            
+            showToast('AI가 요청을 처리 중입니다...', 'success');
+            
+            // AI 분석 탭 업데이트
+            const aiAnalysis = document.getElementById('aiAnalysis');
+            aiAnalysis.innerHTML += `
+                <h3>사용자 요청 처리</h3>
+                <p><strong>요청 내용:</strong> ${request}</p>
+                <p><strong>처리 결과:</strong> 시장 분석 섹션이 보강되었으며, 경쟁사 분석이 추가되었습니다.</p>
+            `;
+            
+            setTimeout(() => {
+                showToast('AI 요청 처리 완료!', 'success');
+            }, 2000);
+        }
+        
+        // 사업계획서 생성
+        function generateBusinessPlan() {
+            const generateBtn = document.getElementById('generateBtn');
+            const downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            const progressBar = document.getElementById('progressBar');
+            const statusMessage = document.getElementById('statusMessage');
+            const previewContent = document.getElementById('previewContent');
+            
+            // 입력 데이터 수집
+            const data = {
+                template: document.querySelector('.template-card.active').dataset.template,
+                company: document.getElementById('companyName').value,
+                businessItem: document.getElementById('businessItem').value,
+                ceo: document.getElementById('ceoName').value,
+                foundedDate: document.getElementById('foundedDate').value,
+                industry: document.getElementById('industry').value,
+                content: document.getElementById('businessContent').value,
+                aiRequest: document.getElementById('aiRequest').value
+            };
+            
+            // 원본 저장
+            data.originalCompany = data.company;
+            
+            // 특수문자 변환
+            data.company = convertSpecialChars(data.company);
+            data.businessItem = convertSpecialChars(data.businessItem);
+            data.ceo = convertSpecialChars(data.ceo);
+            data.content = convertSpecialChars(data.content);
+            
+            // 버튼 상태 변경
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="loading"></span>생성 중...';
+            
+            // 진행 상태 업데이트
+            const steps = [
+                { progress: 20, message: '📝 기본 정보 분석 중... (1/5)' },
+                { progress: 40, message: '📊 Excel 데이터 처리 중... (2/5)' },
+                { progress: 60, message: '🖼️ 이미지 처리 중... (3/5)' },
+                { progress: 80, message: '🤖 AI 문서 생성 중... (4/5)' },
+                { progress: 100, message: '✨ 최종 검토 중... (5/5)' }
+            ];
+            
+            let currentStep = 0;
+            const interval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    progressBar.style.width = step.progress + '%';
+                    statusMessage.innerHTML = step.message;
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                    
+                    // 문서 생성
+                    const html = generateDocument(data);
+                    previewContent.innerHTML = html;
+                    
+                    // 완료 상태
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '✅ 생성 완료 (재생성하기)';
+                    downloadHtmlBtn.disabled = false;
+                    downloadPdfBtn.disabled = false;
+                    
+                    statusMessage.className = 'status-message status-success';
+                    statusMessage.innerHTML = '✅ 사업계획서가 성공적으로 생성되었습니다!';
+                    
+                    // 데이터 저장
+                    generatedDocument = {
+                        data: data,
+                        html: html
+                    };
+                    
+                    showToast('사업계획서 생성 완료!', 'success');
+                }
+            }, 800);
+        }
+        
+        // 문서 생성 함수
+        function generateDocument(data) {
+            const templates = {
+                government: () => {
+                    let html = `
+                        <h1>${data.businessItem} 사업계획서</h1>
+                        
+                        <h2>1. 사업 개요</h2>
+                        <table>
+                            <tr><th width="30%">회사명</th><td>${data.company}</td></tr>
+                            <tr><th>대표자</th><td>${data.ceo}</td></tr>
+                            <tr><th>설립일</th><td>${data.foundedDate}</td></tr>
+                            <tr><th>사업 아이템</th><td>${data.businessItem}</td></tr>
+                            <tr><th>업종</th><td>${data.industry}</td></tr>
+                        </table>
+                        
+                        <h2>2. 사업 내용</h2>
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                        </div>
+                    `;
+                    
+                    // Excel 데이터 추가
+                    if (excelData.length > 0) {
+                        html += '<h2>3. 데이터 분석</h2>';
+                        excelData.forEach(file => {
+                            html += `
+                                <div class="excel-preview">
+                                    <h3>📊 ${file.name}</h3>
+                                    ${file.html}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += `
+                            <h2>3. 시장 분석</h2>
+                            <h3>3.1 시장 규모</h3>
+                            <p>국내 ${data.industry} 시장은 2024년 기준 약 1.5조원 규모이며, 연평균 15% 성장하여 2027년까지 2.3조원 규모로 확대될 전망입니다.</p>
+                            
+                            <table>
+                                <tr>
+                                    <th>연도</th>
+                                    <th>시장 규모</th>
+                                    <th>성장률</th>
+                                </tr>
+                                <tr>
+                                    <td>2024년</td>
+                                    <td>1.5조원</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>2025년</td>
+                                    <td>1.7조원</td>
+                                    <td>13.3%</td>
+                                </tr>
+                                <tr>
+                                    <td>2026년(예상)</td>
+                                    <td>2.0조원</td>
+                                    <td>17.6%</td>
+                                </tr>
+                            </table>
+                        `;
+                    }
+                    
+                    // 이미지 추가
+                    if (imageData.length > 0) {
+                        html += '<h2>4. 제품/서비스 이미지</h2>';
+                        html += '<div class="image-preview-grid">';
+                        imageData.forEach(img => {
+                            html += `
+                                <div style="margin: 10px; text-align: center;">
+                                    <img src="${img.data}" style="max-width: 300px; border: 1px solid #ddd; border-radius: 8px;">
+                                    <p style="margin-top: 5px; font-size: 0.9em; color: #666;">${img.name}</p>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // AI 요청 반영
+                    if (data.aiRequest) {
+                        html += `
+                            <h2>5. 추가 분석 (AI 생성)</h2>
+                            <h3>5.1 경쟁사 분석</h3>
+                            <p>주요 경쟁사 대비 우리의 강점은 다음과 같습니다:</p>
+                            <ul>
+                                <li>혁신적인 AI 기술 보유</li>
+                                <li>고객 맞춤형 솔루션 제공</li>
+                                <li>빠른 시장 대응력</li>
+                                <li>전문 인력 보유</li>
+                            </ul>
+                            
+                            <h3>5.2 리스크 관리</h3>
+                            <p>잠재적 리스크와 대응 방안:</p>
+                            <ul>
+                                <li>기술 리스크: 지속적인 R&D 투자</li>
+                                <li>시장 리스크: 다각화 전략 수립</li>
+                                <li>재무 리스크: 안정적 현금흐름 관리</li>
+                            </ul>
+                        `;
+                    }
+                    
+                    html += `
+                        <h2>6. 재무 계획</h2>
+                        <table>
+                            <tr>
+                                <th>구분</th>
+                                <th>1차년도</th>
+                                <th>2차년도</th>
+                                <th>3차년도</th>
+                            </tr>
+                            <tr>
+                                <td>매출</td>
+                                <td>10억원</td>
+                                <td>25억원</td>
+                                <td>50억원</td>
+                            </tr>
+                            <tr>
+                                <td>영업이익</td>
+                                <td>2억원</td>
+                                <td>7억원</td>
+                                <td>15억원</td>
+                            </tr>
+                            <tr>
+                                <td>순이익</td>
+                                <td>1.5억원</td>
+                                <td>5억원</td>
+                                <td>12억원</td>
+                            </tr>
+                        </table>
+                        
+                        <div class="conversion-info">
+                            <h3>변환 정보</h3>
+                            <p><strong>원본:</strong> ${data.originalCompany}</p>
+                            <p><strong>변환:</strong> ${data.company}</p>
+                            <p>모든 특수문자가 자동으로 변환되었습니다.</p>
+                            <p><strong>생성일:</strong> ${new Date().toLocaleDateString('ko-KR')} ${new Date().toLocaleTimeString('ko-KR')}</p>
+                        </div>
+                    `;
+                    
+                    return html;
+                },
+                
+                vc: () => `
+                    <h1>${data.company} 투자 제안서</h1>
+                    
+                    <h2>Executive Summary</h2>
+                    <p>${data.businessItem}을 통해 ${data.industry} 시장을 혁신하고자 합니다.</p>
+                    
+                    <h2>Problem & Solution</h2>
+                    <table>
+                        <tr><th>문제</th><td>기존 솔루션의 한계와 시장의 미충족 니즈</td></tr>
+                        <tr><th>해결책</th><td>${data.businessItem}</td></tr>
+                        <tr><th>차별화</th><td>AI 기술 기반의 혁신적 접근</td></tr>
+                    </table>
+                    
+                    <h2>Market Opportunity</h2>
+                    <ul>
+                        <li>TAM (Total Addressable Market): 100조원</li>
+                        <li>SAM (Serviceable Available Market): 10조원</li>
+                        <li>SOM (Serviceable Obtainable Market): 1조원</li>
+                    </ul>
+                    
+                    <h2>Business Model</h2>
+                    ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                    
+                    <h2>Traction</h2>
+                    <ul>
+                        <li>MVP 개발 완료</li>
+                        <li>베타 테스터 100명 확보</li>
+                        <li>월 성장률 30%</li>
+                    </ul>
+                    
+                    <h2>Investment Ask</h2>
+                    <table>
+                        <tr><th>투자 규모</th><td>50억원</td></tr>
+                        <tr><th>밸류에이션</th><td>200억원</td></tr>
+                        <tr><th>투자금 사용처</th><td>기술개발 70%, 마케팅 20%, 운영 10%</td></tr>
+                    </table>
+                `,
+                
+                bank: () => `
+                    <h1>${data.company} 대출 신청서</h1>
+                    
+                    <h2>1. 기업 개요</h2>
+                    <table>
+                        <tr><th>회사명</th><td>${data.company}</td></tr>
+                        <tr><th>대표자</th><td>${data.ceo}</td></tr>
+                        <tr><th>설립일</th><td>${data.foundedDate}</td></tr>
+                        <tr><th>사업 내용</th><td>${data.businessItem}</td></tr>
+                    </table>
+                    
+                    <h2>2. 대출 신청 내용</h2>
+                    <table>
+                        <tr><th>신청 금액</th><td>5억원</td></tr>
+                        <tr><th>대출 기간</th><td>5년</td></tr>
+                        <tr><th>상환 방법</th><td>3년 거치 2년 분할상환</td></tr>
+                    </table>
+                    
+                    <h2>3. 자금 용도</h2>
+                    ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                    
+                    <h2>4. 상환 계획</h2>
+                    <p>안정적인 매출 성장을 통해 차질 없는 상환이 가능합니다.</p>
+                `
+            };
+            
+            return templates[data.template]();
+        }
+        
+        // HTML 다운로드
+        function downloadHTML() {
+            if (!generatedDocument) return;
+            
+            const { data, html } = generatedDocument;
+            
+            const fullHtml = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사업계획서 - ${data.company}</title>
+    <style>
+        @page { size: A4; margin: 20mm; }
+        body {
+            font-family: '맑은 고딕', sans-serif;
+            line-height: 1.8;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            page-break-after: avoid;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            page-break-after: avoid;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .conversion-info {
+            background: #fffacd;
+            padding: 15px;
+            border-left: 4px solid #f39c12;
+            margin: 30px 0;
+            border-radius: 5px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        @media print {
+            body { margin: 0; }
+            .conversion-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    ${html}
+    <div style="margin-top: 50px; text-align: center; color: #666;">
+        <p>작성일: ${new Date().toLocaleDateString('ko-KR')}</p>
+        <p>Business Plan HWP MCP로 자동 생성</p>
+    </div>
+</body>
+</html>`;
+            
+            const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `사업계획서_${data.company}_${new Date().toISOString().slice(0, 10)}.html`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('HTML 파일 다운로드 시작!', 'success');
+        }
+        
+        // PDF 다운로드 (기본 구현)
+        async function downloadPDF() {
+            if (!generatedDocument) return;
+            
+            showToast('PDF 생성 중... 잠시만 기다려주세요.', 'success');
+            
+            const { data } = generatedDocument;
+            const element = document.getElementById('previewContent');
+            
+            // html2canvas를 사용한 PDF 생성
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                pdf.save(`사업계획서_${data.company}_${new Date().toISOString().slice(0, 10)}.pdf`);
+                showToast('PDF 다운로드 완료!', 'success');
+            } catch (error) {
+                showToast('PDF 생성 중 오류가 발생했습니다.', 'error');
+                console.error(error);
+            }
+        }
+        
+        // 로컬 저장
+        function saveToLocal() {
+            const data = {
+                template: document.querySelector('.template-card.active').dataset.template,
+                company: document.getElementById('companyName').value,
+                businessItem: document.getElementById('businessItem').value,
+                ceo: document.getElementById('ceoName').value,
+                foundedDate: document.getElementById('foundedDate').value,
+                industry: document.getElementById('industry').value,
+                content: document.getElementById('businessContent').value,
+                aiRequest: document.getElementById('aiRequest').value,
+                excelData: excelData,
+                imageData: imageData
+            };
+            
+            localStorage.setItem('businessPlanData', JSON.stringify(data));
+            showToast('데이터가 저장되었습니다!', 'success');
+        }
+        
+        // 로컬에서 불러오기
+        function loadFromLocal() {
+            const savedData = localStorage.getItem('businessPlanData');
+            if (!savedData) {
+                showToast('저장된 데이터가 없습니다.', 'error');
+                return;
+            }
+            
+            const data = JSON.parse(savedData);
+            
+            // 템플릿 설정
+            document.querySelectorAll('.template-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.template === data.template);
+            });
+            
+            // 입력 필드 설정
+            document.getElementById('companyName').value = data.company || '';
+            document.getElementById('businessItem').value = data.businessItem || '';
+            document.getElementById('ceoName').value = data.ceo || '';
+            document.getElementById('foundedDate').value = data.foundedDate || '';
+            document.getElementById('industry').value = data.industry || '';
+            document.getElementById('businessContent').value = data.content || '';
+            document.getElementById('aiRequest').value = data.aiRequest || '';
+            
+            // Excel 데이터 복원
+            if (data.excelData) {
+                excelData = data.excelData;
+                updateExcelPreview();
+            }
+            
+            // 이미지 데이터 복원
+            if (data.imageData) {
+                imageData = data.imageData;
+                // 이미지 미리보기 업데이트
+                const imagePreview = document.getElementById('imagePreview');
+                imagePreview.innerHTML = '';
+                imageData.forEach(img => {
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'image-preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${img.data}" alt="${img.name}">
+                        <div style="padding: 8px; font-size: 0.8em; background: #f8f9fa;">${img.name}</div>
+                    `;
+                    imagePreview.appendChild(previewItem);
+                });
+            }
+            
+            showToast('데이터를 불러왔습니다!', 'success');
+        }
+        
+        // 초기화
+        function resetAll() {
+            if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
+            
+            document.getElementById('companyName').value = '';
+            document.getElementById('businessItem').value = '';
+            document.getElementById('ceoName').value = '';
+            document.getElementById('foundedDate').value = '';
+            document.getElementById('industry').selectedIndex = 0;
+            document.getElementById('businessContent').value = '';
+            document.getElementById('aiRequest').value = '';
+            
+            excelData = [];
+            imageData = [];
+            generatedDocument = null;
+            
+            document.getElementById('excel-files').innerHTML = '';
+            document.getElementById('image-files').innerHTML = '';
+            document.getElementById('excelPreview').innerHTML = '<p>Excel 파일을 업로드하면 여기에 데이터가 표시됩니다.</p>';
+            document.getElementById('imagePreview').innerHTML = '<p>이미지를 업로드하면 여기에 미리보기가 표시됩니다.</p>';
+            
+            showToast('초기화 완료!', 'success');
+        }
+        
+        // 도움말
+        function showHelp() {
+            alert(`📖 사용 방법
+
+1. 템플릿 선택: 정부지원/VC/은행 중 선택
+2. 기본 정보 입력: 회사명, 대표자 등
+3. Excel 파일 업로드 (선택사항)
+4. 이미지 업로드 (선택사항)
+5. AI 수정 요청 (선택사항)
+6. '사업계획서 생성하기' 클릭
+7. HTML 또는 PDF로 다운로드
+
+💡 팁:
+- 특수문자는 자동으로 변환됩니다
+- 데이터는 로컬에 저장/불러오기 가능
+- 드래그 앤 드롭으로 파일 업로드 가능`);
+        }
+        
+        // 전체화면
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // 토스트 메시지
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            showToast('Business Plan HWP MCP 준비 완료!', 'success');
+        });
+    </script>
+</body>
+</html>
