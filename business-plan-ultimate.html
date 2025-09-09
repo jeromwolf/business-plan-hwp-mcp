@@ -801,8 +801,11 @@
                     <button class="btn" id="generateBtn" onclick="generateBusinessPlan()">
                         🚀 사업계획서 생성하기
                     </button>
-                    <button class="btn btn-success" id="downloadHtmlBtn" onclick="downloadHTML()" disabled>
-                        📥 HTML 다운로드
+                    <button class="btn btn-success" id="downloadHwpBtn" onclick="downloadHWP()" disabled>
+                        📄 HWP 다운로드
+                    </button>
+                    <button class="btn btn-warning" id="downloadDocxBtn" onclick="downloadDOCX()" disabled>
+                        📝 DOCX 다운로드
                     </button>
                     <button class="btn btn-danger" id="downloadPdfBtn" onclick="downloadPDF()" disabled>
                         📑 PDF 다운로드
@@ -1180,11 +1183,17 @@
             editor.querySelector('.btn-success').style.display = 'none';
             editor.querySelector('.btn-danger').style.display = 'none';
             
-            // 미리보기 업데이트
+            // 미리보기 업데이트 - 중요!
             updatePreview();
             
+            // 미리보기 탭으로 자동 전환 (선택사항)
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.preview-area').forEach(area => area.style.display = 'none');
+            document.querySelector('.tab:first-child').classList.add('active');
+            document.getElementById('preview-tab').style.display = 'block';
+            
             currentEditingSection = null;
-            showToast(`섹션 ${sectionId} 저장 완료`, 'success');
+            showToast(`섹션 ${sectionId} 저장 완료! 미리보기를 확인하세요.`, 'success');
         }
         
         function cancelEdit(sectionId) {
@@ -1207,12 +1216,16 @@
             const container = document.getElementById('sectionsContainer');
             const sectionCount = container.querySelectorAll('.section-editor').length + 1;
             
+            // 섹션 제목 입력받기
+            const sectionTitle = prompt('새 섹션의 제목을 입력하세요:', `섹션 ${sectionCount}`);
+            if (!sectionTitle) return;
+            
             const newSection = document.createElement('div');
             newSection.className = 'section-editor';
             newSection.dataset.section = sectionCount;
             newSection.innerHTML = `
                 <div class="section-header">
-                    <div class="section-title">${sectionCount}. 새 섹션</div>
+                    <div class="section-title">${sectionCount}. ${sectionTitle}</div>
                     <div class="section-actions">
                         <button class="btn btn-small" onclick="editSection(${sectionCount})">✏️ 편집</button>
                         <button class="btn btn-small btn-success" onclick="saveSection(${sectionCount})" style="display: none;">💾 저장</button>
@@ -1232,10 +1245,13 @@
             const addButton = container.lastElementChild;
             container.insertBefore(newSection, addButton);
             
+            // documentSections에 추가
+            documentSections[sectionCount] = '새 섹션의 내용을 입력하세요.';
+            
             // 바로 편집 모드로 전환
             editSection(sectionCount);
             
-            showToast('새 섹션이 추가되었습니다', 'success');
+            showToast(`'${sectionTitle}' 섹션이 추가되었습니다`, 'success');
         }
         
         // 섹션 삭제
@@ -1485,7 +1501,8 @@
         // 사업계획서 생성
         function generateBusinessPlan() {
             const generateBtn = document.getElementById('generateBtn');
-            const downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
+            const downloadHwpBtn = document.getElementById('downloadHwpBtn');
+            const downloadDocxBtn = document.getElementById('downloadDocxBtn');
             const downloadPdfBtn = document.getElementById('downloadPdfBtn');
             const progressBar = document.getElementById('progressBar');
             const statusMessage = document.getElementById('statusMessage');
@@ -1522,48 +1539,90 @@
                 if (progress >= 100) {
                     clearInterval(interval);
                     
-                    // 문서 생성
+                    // 섹션 데이터 초기화 (먼저 실행)
+                    initializeSections(data);
+                    
+                    // 문서 생성 (초기화된 섹션 사용)
                     const html = generateDocument(data);
                     document.getElementById('previewContent').innerHTML = html;
-                    
-                    // 섹션 데이터 초기화
-                    initializeSections(data);
                     
                     // 완료 상태
                     generateBtn.disabled = false;
                     generateBtn.innerHTML = '✅ 생성 완료 (재생성하기)';
-                    downloadHtmlBtn.disabled = false;
+                    downloadHwpBtn.disabled = false;
+                    downloadDocxBtn.disabled = false;
                     downloadPdfBtn.disabled = false;
                     
                     statusMessage.className = 'status-message status-success';
                     statusMessage.innerHTML = '✅ 사업계획서가 성공적으로 생성되었습니다!';
                     
-                    generatedDocument = { data, html };
+                    // generatedDocument 업데이트
+                    generatedDocument = { data, html, sections: documentSections };
                     
                     showToast('사업계획서 생성 완료!', 'success');
                 }
             }, 500);
         }
         
-        // 문서 생성
+        // 문서 생성 (편집된 섹션 내용 사용)
         function generateDocument(data) {
-            let html = `
-                <h1>${data.businessItem} 사업계획서</h1>
-                
-                <h2>1. 사업 개요</h2>
-                <table>
-                    <tr><th width="30%">회사명</th><td>${data.company}</td></tr>
-                    <tr><th>대표자</th><td>${data.ceo}</td></tr>
-                    <tr><th>설립일</th><td>${data.foundedDate}</td></tr>
-                    <tr><th>사업 아이템</th><td>${data.businessItem}</td></tr>
-                    <tr><th>업종</th><td>${data.industry}</td></tr>
-                </table>
-                
-                <h2>2. 사업 내용</h2>
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
-                </div>
-            `;
+            let html = `<h1>${data.businessItem} 사업계획서</h1>`;
+            
+            // documentSections가 비어있으면 기본값 사용
+            if (Object.keys(documentSections).length === 0) {
+                // 기본 문서 생성
+                html += `
+                    <h2>1. 사업 개요</h2>
+                    <table>
+                        <tr><th width="30%">회사명</th><td>${data.company}</td></tr>
+                        <tr><th>대표자</th><td>${data.ceo}</td></tr>
+                        <tr><th>설립일</th><td>${data.foundedDate}</td></tr>
+                        <tr><th>사업 아이템</th><td>${data.businessItem}</td></tr>
+                        <tr><th>업종</th><td>${data.industry}</td></tr>
+                    </table>
+                    
+                    <h2>2. 사업 내용</h2>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        ${data.content.split('\n').map(line => `<p>${line}</p>`).join('')}
+                    </div>
+                `;
+            } else {
+                // 편집된 섹션 내용 사용
+                Object.keys(documentSections).forEach(id => {
+                    const sectionTitle = {
+                        1: '사업 개요',
+                        2: '시장 분석',
+                        3: '제품/서비스',
+                        4: '마케팅 전략',
+                        5: '재무 계획'
+                    }[id] || `섹션 ${id}`;
+                    
+                    html += `<h2>${id}. ${sectionTitle}</h2>`;
+                    
+                    // 섹션 1은 테이블 형식
+                    if (id == 1) {
+                        const lines = documentSections[id].split('\n');
+                        html += '<table>';
+                        lines.forEach(line => {
+                            if (line.includes(':')) {
+                                const [key, value] = line.split(':');
+                                html += `<tr><th width="30%">${key.trim()}</th><td>${(value || '').trim()}</td></tr>`;
+                            }
+                        });
+                        html += '</table>';
+                    } else {
+                        // 다른 섹션은 텍스트 형식
+                        html += '<div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">';
+                        const lines = documentSections[id].split('\n');
+                        lines.forEach(line => {
+                            if (line.trim()) {
+                                html += `<p>${line}</p>`;
+                            }
+                        });
+                        html += '</div>';
+                    }
+                });
+            }
             
             // Excel 데이터 추가
             if (excelData.length > 0) {
@@ -1608,45 +1667,224 @@
         function updatePreview() {
             if (!generatedDocument) return;
             
-            let html = generateDocument(generatedDocument.data);
-            
-            // 편집된 섹션 내용 반영
-            Object.keys(documentSections).forEach(id => {
-                // 실제 문서에 편집 내용 반영하는 로직
-            });
-            
+            // 편집된 내용으로 HTML 재생성
+            const html = generateDocument(generatedDocument.data);
             document.getElementById('previewContent').innerHTML = html;
+            
+            // generatedDocument의 html도 업데이트
+            generatedDocument.html = html;
+            generatedDocument.sections = documentSections;
         }
         
-        // HTML 다운로드
-        function downloadHTML() {
+        // HWP 다운로드 (HTML 형식으로 한글에서 바로 열 수 있도록)
+        function downloadHWP() {
             if (!generatedDocument) return;
             
-            const fullHtml = `<!DOCTYPE html>
+            showToast('HWP 호환 파일 생성 중...', 'info');
+            
+            // HWP에서 바로 열 수 있는 HTML 형식
+            const hwpHtml = `<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>사업계획서</title>
+    <meta name="generator" content="Business Plan HWP MCP">
+    <title>사업계획서 - ${generatedDocument.data.company}</title>
     <style>
-        body { font-family: '맑은 고딕', sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1 { color: #333; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
-        h2 { color: #555; margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th { background: #667eea; color: white; padding: 12px; text-align: left; }
-        td { border: 1px solid #ddd; padding: 10px; }
+        @page { size: A4; margin: 20mm; }
+        body { 
+            font-family: '한컴바탕', '맑은 고딕', 'HCR Batang', sans-serif;
+            font-size: 11pt;
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+        }
+        h1 { 
+            font-size: 18pt;
+            font-weight: bold;
+            text-align: center;
+            margin: 30pt 0;
+            page-break-after: avoid;
+        }
+        h2 { 
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 20pt;
+            margin-bottom: 10pt;
+            page-break-after: avoid;
+        }
+        h3 { 
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 15pt;
+            margin-bottom: 10pt;
+        }
+        p { 
+            text-indent: 2em;
+            margin: 10pt 0;
+            text-align: justify;
+        }
+        table { 
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15pt 0;
+            page-break-inside: avoid;
+        }
+        th { 
+            background-color: #e6e6e6;
+            border: 1pt solid #000;
+            padding: 8pt;
+            font-weight: bold;
+            text-align: center;
+        }
+        td { 
+            border: 1pt solid #000;
+            padding: 8pt;
+        }
+        .page-break { page-break-before: always; }
+        @media print {
+            body { margin: 0; }
+        }
     </style>
 </head>
-<body>${generatedDocument.html}</body>
+<body>
+    ${generateHWPContent()}
+    <div style="margin-top: 50pt; text-align: center; font-size: 10pt; color: #666;">
+        <p>작성일: ${new Date().toLocaleDateString('ko-KR')}</p>
+        <p>Business Plan HWP MCP로 자동 생성</p>
+    </div>
+</body>
 </html>`;
             
-            const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+            const blob = new Blob([hwpHtml], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `사업계획서_${new Date().toISOString().slice(0, 10)}.html`;
+            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.html`;
             a.click();
             
-            showToast('HTML 다운로드 완료!', 'success');
+            setTimeout(() => {
+                showToast('다운로드 완료! 한글에서 파일을 열고 HWP로 저장하세요.', 'success');
+                alert('📌 다운로드한 HTML 파일 사용법:\n\n1. 한글(HWP) 프로그램 실행\n2. 파일 → 열기\n3. 다운로드한 HTML 파일 선택\n4. 파일 → 다른 이름으로 저장\n5. 파일 형식을 HWP로 선택\n6. 저장\n\n✅ 모든 서식과 표가 그대로 유지됩니다!');
+            }, 500);
+        }
+        
+        // HWP용 콘텐츠 생성
+        function generateHWPContent() {
+            // 편집된 내용이 반영된 최신 HTML 사용
+            if (generatedDocument && generatedDocument.sections) {
+                // documentSections가 업데이트되어 있으면 사용
+                Object.assign(documentSections, generatedDocument.sections);
+            }
+            
+            let content = '';
+            
+            // 제목
+            content += `<h1>${generatedDocument.data.businessItem} 사업계획서</h1>`;
+            
+            // 편집된 섹션 내용 반영
+            Object.keys(documentSections).forEach(id => {
+                const sectionTitle = {
+                    1: '사업 개요',
+                    2: '시장 분석',
+                    3: '제품/서비스',
+                    4: '마케팅 전략',
+                    5: '재무 계획'
+                }[id] || `섹션 ${id}`;
+                
+                content += `<h2>${id}. ${sectionTitle}</h2>`;
+                
+                // 섹션 1은 테이블 형식
+                if (id == 1) {
+                    const lines = documentSections[id].split('\n');
+                    content += '<table>';
+                    lines.forEach(line => {
+                        if (line.includes(':')) {
+                            const [key, value] = line.split(':');
+                            content += `<tr><th width="30%">${key.trim()}</th><td>${value.trim()}</td></tr>`;
+                        }
+                    });
+                    content += '</table>';
+                } else {
+                    // 다른 섹션은 문단 형식
+                    const lines = documentSections[id].split('\n');
+                    lines.forEach(line => {
+                        if (line.trim()) {
+                            content += `<p>${line}</p>`;
+                        }
+                    });
+                }
+            });
+            
+            // Excel 데이터 추가
+            if (excelData.length > 0) {
+                content += '<h2>데이터 분석</h2>';
+                excelData.forEach(file => {
+                    content += `<h3>${file.name}</h3>`;
+                    content += file.html;
+                });
+            }
+            
+            // 이미지는 HWP 변환시 별도 처리 필요
+            if (imageData.length > 0) {
+                content += '<h2>참고 자료</h2>';
+                content += '<p><em>※ 이미지는 한글 프로그램에서 별도로 삽입해주세요.</em></p>';
+                imageData.forEach(img => {
+                    content += `<p>- ${img.name}</p>`;
+                });
+            }
+            
+            return content;
+        }
+        
+        // DOCX 다운로드 (Word 호환)
+        function downloadDOCX() {
+            if (!generatedDocument) return;
+            
+            showToast('DOCX 호환 파일 생성 중...', 'info');
+            
+            // Word에서 바로 열 수 있는 HTML 형식 (MS Word HTML)
+            const docxHtml = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="UTF-8">
+    <title>사업계획서</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+        @page Section1 { size: 595.3pt 841.9pt; margin: 72pt; }
+        div.Section1 { page: Section1; }
+        body { font-family: '맑은 고딕', sans-serif; font-size: 11pt; }
+        h1 { font-size: 18pt; text-align: center; }
+        h2 { font-size: 14pt; margin-top: 20pt; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8pt; }
+        th { background: #e6e6e6; }
+    </style>
+</head>
+<body>
+    <div class="Section1">
+        ${generateHWPContent()}
+    </div>
+</body>
+</html>`;
+            
+            const blob = new Blob([docxHtml], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.doc`;
+            a.click();
+            
+            showToast('DOCX 호환 파일 다운로드 완료!', 'success');
         }
         
         // PDF 다운로드
