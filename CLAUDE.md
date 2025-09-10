@@ -12,14 +12,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **business-plan-ultimate-fixed.html**: 메인 웹 애플리케이션 (완전 독립 실행형)
   - 섹션별 편집 기능
   - Excel/이미지 업로드 및 삽입
-  - PDF/HWP 문서 생성
+  - PDF/DOCX/HWP 문서 생성
   - localStorage 자동 저장
 
 ### 주요 기능
 1. **문서 생성**: 3가지 템플릿 (기본/VC투자/정부지원)
 2. **미디어 관리**: Excel 데이터와 이미지 통합
 3. **특수문자 처리**: 한글 특수문자 자동 변환
-4. **다운로드**: HTML(HWP 호환) 및 PDF 저장
+4. **다운로드 옵션**:
+   - **DOCX** (권장): 이미지 포함, 한글/Word 호환
+   - **HWP HTML**: 텍스트와 표만 (이미지는 플레이스홀더)
+   - **PDF**: 브라우저 인쇄 기능 사용
 
 ### 기술 스택
 - **Frontend**: Vanilla JavaScript + HTML5
@@ -45,19 +48,37 @@ npm run electron
 npm test
 ```
 
-## Known Issues (수정 예정)
+## Known Issues (해결 중)
 
-1. **DOCX 이미지 크기 문제**
-   - 현상: 이미지가 너무 크게 표시됨
-   - 해결 방안: 이미지 자동 리사이징 기능 추가
+1. **DOCX 이미지 회색 표시 문제**
+   - 현상: base64 이미지가 Word/한글에서 회색으로 표시
+   - 원인: HTML 형식의 DOCX는 base64 이미지 지원 제한
+   - 임시 해결: DOCX 확장자 사용, 크기 조정
+   - 근본 해결 필요: 실제 DOCX 라이브러리 사용 검토
 
-2. **HWP 다운로드**
-   - 현상: HTML 파일로 다운로드됨
-   - 해결 방안: 한글에서 열어서 HWP로 저장 필요
-   - 향후: 직접 HWP 생성 기능 개발
+2. **HWP 네이티브 형식 미지원**
+   - 현상: 직접 HWP 파일 생성 불가
+   - 현재: HTML로 다운로드 후 한글에서 변환
+   - 이미지 포함 시 한글이 파일을 열지 못함
+   - 해결 방향: HWP 라이브러리 또는 서버사이드 처리
 
-## Recent Fixes (2025-09-10)
+## Recent Updates (2025-09-10)
 
+### 오늘 수정 사항
+1. **DOCX 이미지 자동 리사이징**
+   - 최대 너비 400px로 자동 조정
+   - 비율 유지하며 크기 최적화
+
+2. **다운로드 우선순위 변경**
+   - DOCX를 메인으로 (이미지 포함)
+   - HWP는 텍스트 전용으로 보조
+
+3. **한글 호환성 개선 시도**
+   - MS Word 호환 HTML 형식 적용
+   - .doc → .docx 확장자 변경
+   - 여전히 base64 이미지 문제 존재
+
+### 이전 수정 사항
 1. **PDF 한글 깨짐 해결**
    - 브라우저 인쇄 기능 사용으로 변경
    - 한글 폰트 완벽 지원
