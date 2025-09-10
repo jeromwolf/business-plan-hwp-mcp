@@ -2112,35 +2112,7 @@ ${processedHtml}
         }
         
         // startAIMode는 ai-automation.js에 정의됨
-        
-        // AI 콘텐츠를 폼에 적용하는 함수
-        function populateFormWithAIContent(content) {
-            // 기본 정보
-            if (content.company) document.getElementById('companyName').value = content.company;
-            if (content.ceo) document.getElementById('ceoName').value = content.ceo;
-            if (content.establishDate) document.getElementById('establishDate').value = content.establishDate;
-            if (content.businessModel) document.getElementById('businessModel').value = content.businessModel;
-            if (content.revenueModel) document.getElementById('revenueModel').value = content.revenueModel;
-            
-            // 섹션별 콘텐츠
-            if (content.sections) {
-                Object.keys(content.sections).forEach(sectionId => {
-                    const textarea = document.querySelector(`textarea[data-section="${sectionId}"]`);
-                    if (textarea) {
-                        textarea.value = content.sections[sectionId];
-                    }
-                });
-            }
-            
-            // 기존 화면으로 전환
-            document.getElementById('mode-selection-screen').style.display = 'none';
-            document.getElementById('main-screen').style.display = 'block';
-            
-            // 자동 저장
-            saveToLocalStorage();
-            
-            showToast('✨ AI 작성 완료! 내용을 검토하고 수정해주세요.', 'success');
-        }
+        // populateFormWithAIContent는 content-mapper.js에 정의됨
     </script>
     </div> <!-- main-screen 닫기 -->
 </body>
