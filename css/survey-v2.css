@@ -1,0 +1,252 @@
+/**
+ * 설문 시스템 V2 스타일시트
+ */
+
+/* 모달 오버레이 */
+.survey-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 모달 컨테이너 */
+.survey-container {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+}
+
+/* 헤더 */
+.survey-header {
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.survey-header h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.survey-description {
+    margin: 0 0 20px 0;
+    opacity: 0.95;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 진행률 표시 */
+.survey-progress {
+    margin-top: 20px;
+}
+
+.progress-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* 바디 */
+.survey-body {
+    padding: 30px;
+    overflow-y: auto;
+    flex: 1;
+    background: #f8f9fa;
+}
+
+.section-content h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.section-desc {
+    color: #666;
+    margin: 0 0 25px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 질문 그룹 */
+.questions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.question-group {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.question-label {
+    display: block;
+    margin-bottom: 10px;
+    color: #495057;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.question-label .required {
+    color: #dc3545;
+    margin-left: 4px;
+}
+
+/* 입력 필드 */
+.survey-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.survey-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.survey-textarea {
+    min-height: 80px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+/* 푸터 */
+.survey-footer {
+    padding: 20px 30px;
+    background: white;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+/* 버튼 */
+.survey-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.survey-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.survey-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.survey-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.survey-btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.survey-btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.survey-btn-danger {
+    background: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.survey-btn-danger:hover {
+    background: #dc3545;
+    color: white;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .survey-container {
+        width: 95%;
+        max-height: 95vh;
+    }
+    
+    .survey-header {
+        padding: 20px;
+    }
+    
+    .survey-body {
+        padding: 20px;
+    }
+    
+    .survey-footer {
+        flex-direction: column;
+    }
+    
+    .survey-btn {
+        width: 100%;
+    }
+}
