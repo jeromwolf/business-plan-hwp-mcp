@@ -1271,7 +1271,7 @@
             return processedHtml;
         }
         
-        // HWP 다운로드 (개선된 네이티브 HWP 생성)
+        // HWP 다운로드 (한글 호환 HTML 형식)
         function downloadHWP() {
             console.log('downloadHWP called', generatedDocument);
             if (!generatedDocument) {
@@ -1279,177 +1279,106 @@
                 return;
             }
             
-            // 다운로드 방식 선택 다이얼로그
-            const downloadOption = confirm(
-                'HWP 다운로드 옵션 선택\n\n' +
-                '확인: HWPML 형식 (한글 2010 이상)\n' +
-                '취소: HTML 형식 (모든 한글 버전)'
-            );
+            showToast('한글 호환 파일 생성 중...', 'info');
             
-            if (downloadOption) {
-                // HWPML 형식으로 다운로드 (한글 2010 이상)
-                downloadHWPML();
-            } else {
-                // 기존 HTML 형식으로 다운로드
-                downloadHWPHTML();
-            }
-        }
-        
-        // HWPML 형식 다운로드 (한글 2010 이상)
-        function downloadHWPML() {
-            showToast('HWPML 파일 생성 중...', 'info');
-            
-            const hwpmlContent = createHWPMLDocument(generatedDocument);
-            
-            const blob = new Blob([hwpmlContent], { type: 'application/hwpml+xml;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.hwpml`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showToast('HWPML 파일 다운로드 완료! 한글 2010 이상에서 직접 열 수 있습니다.', 'success');
-        }
-        
-        // HTML 형식 다운로드 (모든 한글 버전)
-        function downloadHWPHTML() {
-            showToast('HWP 호환 파일 생성 중...', 'info');
-            
+            // 한글에서 잘 읽히는 HTML 형식으로 생성
             const processedHtml = processHtmlForDownload(generatedDocument.html);
             
-            const hwpHtml = `<!DOCTYPE html>
-<html lang="ko">
+            // 한글 프로그램이 인식할 수 있는 HTML 구조
+            const hwpHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns="http://www.w3.org/TR/REC-html40">
 <head>
-    <meta charset="UTF-8">
-    <title>사업계획서 - ${generatedDocument.data.company}</title>
-    <style>
-        @page { 
-            size: A4; 
-            margin: 20mm 20mm 20mm 30mm;
-        }
-        body { 
-            font-family: '한컴바탕', '맑은 고딕'; 
-            font-size: 11pt; 
-            line-height: 1.8;
-            padding-left: 10mm;
-        }
-        h1 { font-size: 18pt; text-align: center; }
-        h2 { font-size: 14pt; margin-top: 20pt; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1pt solid #000; padding: 8pt; }
-        th { background: #e6e6e6; }
-        img { display: block; margin: 10pt auto; max-width: 500px; height: auto; }
-    </style>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Business Plan HWP MCP">
+<meta name=Originator content="Business Plan HWP MCP">
+<title>${generatedDocument.data.company} 사업계획서</title>
+<style>
+<!--
+@page Section1
+{size:595.3pt 841.9pt;
+margin:72.0pt 54.0pt 72.0pt 90.0pt;
+mso-header-margin:42.5pt;
+mso-footer-margin:49.6pt;
+mso-paper-source:0;
+layout-grid:18.0pt;}
+div.Section1
+{page:Section1;}
+body {
+    font-family: '맑은 고딕', 'Malgun Gothic', '한컴바탕', 'HCR Batang', sans-serif;
+    font-size: 11pt;
+    line-height: 160%;
+    color: #000000;
+}
+h1 {
+    font-size: 20pt;
+    font-weight: bold;
+    text-align: center;
+    margin: 30pt 0 20pt 0;
+    color: #1a1a1a;
+}
+h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 20pt 0 10pt 0;
+    color: #333333;
+    border-bottom: 2pt solid #667eea;
+    padding-bottom: 5pt;
+}
+p {
+    margin: 0 0 10pt 0;
+    text-align: justify;
+    text-indent: 0pt;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15pt 0;
+}
+table, th, td {
+    border: 1pt solid #000000;
+}
+th {
+    background-color: #e6e6e6;
+    padding: 8pt;
+    font-weight: bold;
+    text-align: center;
+}
+td {
+    padding: 8pt;
+    text-align: left;
+}
+img {
+    max-width: 450pt;
+    height: auto;
+    display: block;
+    margin: 15pt auto;
+}
+.section {
+    margin-bottom: 20pt;
+}
+-->
+</style>
 </head>
-<body>
-    ${processedHtml}
+<body lang=KO style='tab-interval:36.0pt'>
+<div class=Section1>
+${processedHtml}
+</div>
 </body>
 </html>`;
             
-            const blob = new Blob([hwpHtml], { type: 'text/html;charset=utf-8' });
+            const blob = new Blob([hwpHtml], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.html`;
+            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.doc`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            showToast('다운로드 완료! 한글에서 파일을 열고 HWP로 저장하세요.', 'success');
-        }
-        
-        // HWPML 문서 생성 함수
-        function createHWPMLDocument(doc) {
-            const hwpmlContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE HWPML PUBLIC "+//HNC//DTD HWPML 2.8//EN" "http://www.hancom.co.kr/hwpml/hwpml28.dtd">
-<HWPML Version="2.8" SubVersion="2.8.0.0" Style="embed">
-    <HEAD SecCnt="1">
-        <DOCSUMMARY>
-            <TITLE>${doc.data.company} 사업계획서</TITLE>
-            <AUTHOR>Business Plan HWP MCP</AUTHOR>
-            <DATE>${new Date().toISOString()}</DATE>
-        </DOCSUMMARY>
-        <DOCSETTING>
-            <BEGINNUMBER Page="1" Footnote="1" Endnote="1" Picture="1" Table="1" Equation="1"/>
-        </DOCSETTING>
-        <MAPPINGTABLE>
-            <FACENAMELIST>
-                <FONTFACE Lang="Hangul" Count="2">
-                    <FONT Id="0" Type="ttf" Name="한컴바탕"/>
-                    <FONT Id="1" Type="ttf" Name="한컴돋움"/>
-                </FONTFACE>
-            </FACENAMELIST>
-        </MAPPINGTABLE>
-    </HEAD>
-    <BODY>
-        <SECTION Id="0">
-            ${convertToHWPMLBody(doc.html)}
-        </SECTION>
-    </BODY>
-</HWPML>`;
-            
-            return hwpmlContent;
-        }
-        
-        // HTML을 HWPML Body로 변환
-        function convertToHWPMLBody(html) {
-            // 기본 변환 (실제로는 더 복잡한 변환 필요)
-            const parser = new DOMParser();
-            const htmlDoc = parser.parseFromString(html, 'text/html');
-            let hwpmlBody = '';
-            
-            // 각 요소를 HWPML 형식으로 변환
-            htmlDoc.body.childNodes.forEach(node => {
-                if (node.nodeType === 1) { // Element node
-                    const tagName = node.tagName.toLowerCase();
-                    
-                    switch(tagName) {
-                        case 'h1':
-                            hwpmlBody += `<P ParaShape="0" Style="0"><TEXT CharShape="0">${node.textContent}</TEXT></P>\n`;
-                            break;
-                        case 'h2':
-                            hwpmlBody += `<P ParaShape="1" Style="1"><TEXT CharShape="1">${node.textContent}</TEXT></P>\n`;
-                            break;
-                        case 'p':
-                            hwpmlBody += `<P><TEXT>${node.textContent}</TEXT></P>\n`;
-                            break;
-                        case 'table':
-                            hwpmlBody += convertTableToHWPML(node);
-                            break;
-                        case 'img':
-                            hwpmlBody += `<P><TEXT>[이미지: ${node.alt || '이미지'}]</TEXT></P>\n`;
-                            break;
-                    }
-                }
-            });
-            
-            return hwpmlBody;
-        }
-        
-        // 테이블을 HWPML로 변환
-        function convertTableToHWPML(tableNode) {
-            const rows = tableNode.querySelectorAll('tr');
-            const cols = rows[0] ? rows[0].querySelectorAll('th, td').length : 0;
-            
-            let tableML = `<TABLE BorderFill="1" RowCnt="${rows.length}" ColCnt="${cols}">\n`;
-            
-            rows.forEach(row => {
-                tableML += '<ROW>\n';
-                row.querySelectorAll('th, td').forEach(cell => {
-                    tableML += `<CELL ColAddr="0" RowAddr="0" ColSpan="1" RowSpan="1">
-                        <CELLMARGIN Left="72" Right="72" Top="72" Bottom="72"/>
-                        <P><TEXT>${cell.textContent}</TEXT></P>
-                    </CELL>\n`;
-                });
-                tableML += '</ROW>\n';
-            });
-            
-            tableML += '</TABLE>\n';
-            return tableML;
+            showToast('다운로드 완료! 한글에서 파일을 열어 HWP로 저장하세요.', 'success');
         }
         
         // DOCX 다운로드 (이미지 크기 자동 조정 적용)
