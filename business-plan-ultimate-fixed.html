@@ -7,6 +7,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- AI 자동화 모듈 -->
+    <script src="js/survey-system.js"></script>
+    <script src="js/ai-engine.js"></script>
+    <script src="templates/prompts.js"></script>
+    <script src="js/content-mapper.js"></script>
+    <script src="js/ai-automation.js"></script>
+    <link rel="stylesheet" href="css/ai-components.css">
     <style>
         * {
             margin: 0;
@@ -420,7 +427,46 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 모드 선택 화면 -->
+    <div id="mode-selection-screen" class="container" style="display: block;">
+        <div class="header">
+            <h1>🏢 Business Plan HWP MCP</h1>
+            <p style="opacity: 0.9;">사업계획서 작성 방식을 선택하세요</p>
+        </div>
+        
+        <div class="mode-selection">
+            <div class="mode-card" onclick="startManualMode()">
+                <div class="icon">✍️</div>
+                <h3>직접 작성</h3>
+                <p>템플릿을 선택하고 직접 내용을 입력합니다</p>
+                <span class="time">⏱️ 30-60분</span>
+            </div>
+            
+            <div class="mode-card recommended" onclick="checkApiKeyAndStart()">
+                <div class="icon">🤖</div>
+                <h3>AI 자동 작성</h3>
+                <p>간단한 설문 후 AI가 초안을 작성해드립니다</p>
+                <span class="time">⏱️ 5-10분</span>
+                <span class="badge">추천</span>
+            </div>
+        </div>
+        
+        <!-- API 키 설정 섹션 -->
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="showApiKeyModal()" style="
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: 1px solid rgba(255,255,255,0.3);
+                padding: 8px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 0.9em;
+            ">⚙️ Gemini API 키 설정</button>
+        </div>
+    </div>
+    
+    <!-- 기존 메인 화면 (처음에는 숨김) -->
+    <div id="main-screen" class="container" style="display: none;">
         <div class="header">
             <h1>🏢 Business Plan HWP MCP - Fixed</h1>
             <p>AI 기반 사업계획서 완전 자동화 시스템 - 수정된 버전</p>
@@ -1935,6 +1981,167 @@ ${processedHtml}
             updateMediaList();
             showToast('Excel 파일이 제거되었습니다.', 'info');
         }
+        
+        // 모드 선택 함수들
+        function startManualMode() {
+            // 수동 모드: 기존 화면으로 전환
+            document.getElementById('mode-selection-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+        }
+        
+        // API 키 확인 후 AI 모드 시작
+        function checkApiKeyAndStart() {
+            // API 키 확인
+            if (!aiEngine.loadApiKey()) {
+                showApiKeyModal(true); // 필수로 입력받기
+            } else {
+                startAIMode();
+            }
+        }
+        
+        // API 키 모달 표시
+        function showApiKeyModal(required = false) {
+            const currentKey = localStorage.getItem('gemini_api_key') || '';
+            const maskedKey = currentKey ? currentKey.substring(0, 10) + '...' : '';
+            
+            const modalHtml = `
+                <div id="api-key-modal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                ">
+                    <div style="
+                        background: white;
+                        padding: 30px;
+                        border-radius: 15px;
+                        max-width: 500px;
+                        width: 90%;
+                    ">
+                        <h2 style="margin-bottom: 20px;">Gemini API 키 설정</h2>
+                        
+                        <p style="margin-bottom: 15px; color: #666;">
+                            Gemini API 키를 입력하세요. 
+                            <a href="https://makersuite.google.com/app/apikey" target="_blank" 
+                               style="color: #667eea;">여기서 무료로 발급</a>받을 수 있습니다.
+                        </p>
+                        
+                        <input type="password" id="api-key-input" 
+                               placeholder="API 키를 입력하세요" 
+                               value="${currentKey}"
+                               style="
+                                   width: 100%;
+                                   padding: 10px;
+                                   border: 2px solid #e0e0e0;
+                                   border-radius: 8px;
+                                   font-size: 1em;
+                                   margin-bottom: 10px;
+                               ">
+                        
+                        ${currentKey ? `<p style="color: #28a745; font-size: 0.9em;">현재 키: ${maskedKey}</p>` : ''}
+                        
+                        <div style="margin-top: 20px; display: flex; gap: 10px;">
+                            <button onclick="saveApiKey(${required})" style="
+                                flex: 1;
+                                padding: 12px;
+                                background: #667eea;
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 1em;
+                            ">저장</button>
+                            
+                            ${!required ? `<button onclick="closeApiKeyModal()" style="
+                                flex: 1;
+                                padding: 12px;
+                                background: #e0e0e0;
+                                color: #333;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 1em;
+                            ">취소</button>` : ''}
+                        </div>
+                        
+                        <p style="margin-top: 15px; font-size: 0.85em; color: #999;">
+                            💡 API 키는 브라우저에 안전하게 저장되며, 서버로 전송되지 않습니다.
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        // API 키 저장
+        function saveApiKey(required = false) {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            
+            if (!apiKey) {
+                alert('API 키를 입력해주세요.');
+                return;
+            }
+            
+            // API 키 저장
+            aiEngine.setApiKey(apiKey);
+            
+            // 모달 닫기
+            closeApiKeyModal();
+            
+            showToast('✅ API 키가 저장되었습니다.', 'success');
+            
+            // 필수 입력인 경우 AI 모드 시작
+            if (required) {
+                startAIMode();
+            }
+        }
+        
+        // API 키 모달 닫기
+        function closeApiKeyModal() {
+            const modal = document.getElementById('api-key-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // startAIMode는 ai-automation.js에 정의됨
+        
+        // AI 콘텐츠를 폼에 적용하는 함수
+        function populateFormWithAIContent(content) {
+            // 기본 정보
+            if (content.company) document.getElementById('companyName').value = content.company;
+            if (content.ceo) document.getElementById('ceoName').value = content.ceo;
+            if (content.establishDate) document.getElementById('establishDate').value = content.establishDate;
+            if (content.businessModel) document.getElementById('businessModel').value = content.businessModel;
+            if (content.revenueModel) document.getElementById('revenueModel').value = content.revenueModel;
+            
+            // 섹션별 콘텐츠
+            if (content.sections) {
+                Object.keys(content.sections).forEach(sectionId => {
+                    const textarea = document.querySelector(`textarea[data-section="${sectionId}"]`);
+                    if (textarea) {
+                        textarea.value = content.sections[sectionId];
+                    }
+                });
+            }
+            
+            // 기존 화면으로 전환
+            document.getElementById('mode-selection-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+            
+            // 자동 저장
+            saveToLocalStorage();
+            
+            showToast('✨ AI 작성 완료! 내용을 검토하고 수정해주세요.', 'success');
+        }
     </script>
+    </div> <!-- main-screen 닫기 -->
 </body>
 </html>
