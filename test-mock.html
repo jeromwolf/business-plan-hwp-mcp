@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>목업 데이터 테스트</title>
+    <script src="js/survey-system.js"></script>
+    <script src="js/ai-engine.js"></script>
+    <script src="templates/prompts.js"></script>
+    <script src="js/content-mapper.js"></script>
+    <script src="js/ai-automation.js"></script>
+    <link rel="stylesheet" href="css/ai-components.css">
+</head>
+<body>
+    <h1>AI 자동화 시스템 테스트</h1>
+    
+    <button onclick="testMockGeneration()">목업 데이터 생성 테스트</button>
+    <button onclick="testContentMapping()">콘텐츠 매핑 테스트</button>
+    <button onclick="testFullFlow()">전체 플로우 테스트 (목업)</button>
+    
+    <div id="result" style="margin-top: 20px; padding: 20px; border: 1px solid #ccc; min-height: 200px;">
+        결과가 여기에 표시됩니다...
+    </div>
+    
+    <!-- 테스트용 UI 필드들 -->
+    <div id="test-fields" style="margin-top: 20px; padding: 20px; background: #f5f5f5;">
+        <h3>테스트 필드들 (AI가 채울 예정)</h3>
+        <input type="text" id="companyName" placeholder="회사명" style="width: 200px; margin: 5px;"><br>
+        <input type="text" id="ceoName" placeholder="대표자명" style="width: 200px; margin: 5px;"><br>
+        <input type="text" id="foundedDate" placeholder="설립일" style="width: 200px; margin: 5px;"><br>
+        <input type="text" id="businessItem" placeholder="사업 아이템" style="width: 200px; margin: 5px;"><br>
+        <textarea id="businessContent" placeholder="사업 내용" style="width: 400px; height: 100px; margin: 5px;"></textarea><br>
+        <textarea id="editor-1" placeholder="회사 개요" style="width: 400px; height: 100px; margin: 5px;"></textarea><br>
+        <textarea id="editor-2" placeholder="시장 분석" style="width: 400px; height: 100px; margin: 5px;"></textarea>
+    </div>
+    
+    <script>
+        // 목업 데이터 생성 테스트
+        function testMockGeneration() {
+            console.log('목업 데이터 생성 테스트...');
+            const resultDiv = document.getElementById('result');
+            
+            const testSurveyData = {
+                basic: {
+                    companyName: '테크이노베이션',
+                    industry: 'AI/머신러닝',
+                    stage: '시드 단계'
+                },
+                business: {
+                    problem: '중소기업의 데이터 분석 역량 부족',
+                    solution: 'No-code AI 분석 플랫폼',
+                    targetMarket: '제조업 중소기업'
+                },
+                financial: {
+                    fundingNeed: '10억원'
+                }
+            };
+            
+            try {
+                // AI 엔진으로 목업 데이터 생성
+                const mockData = aiEngine.generateMockData(testSurveyData);
+                console.log('생성된 목업 데이터:', mockData);
+                
+                resultDiv.innerHTML = `
+                    <h3>✅ 목업 데이터 생성 성공!</h3>
+                    <p><strong>회사명:</strong> ${mockData.company}</p>
+                    <p><strong>대표:</strong> ${mockData.ceo}</p>
+                    <p><strong>설립일:</strong> ${mockData.establishDate}</p>
+                    <p><strong>비즈니스 모델:</strong> ${mockData.businessModel}</p>
+                    <p><strong>수익 모델:</strong> ${mockData.revenueModel}</p>
+                    <h4>섹션 샘플:</h4>
+                    <p style="background: #f0f0f0; padding: 10px;">${mockData.sections.executive_summary}</p>
+                `;
+                
+                return mockData;
+            } catch (error) {
+                console.error('목업 생성 실패:', error);
+                resultDiv.innerHTML = `
+                    <h3>❌ 실패</h3>
+                    <p>에러: ${error.message}</p>
+                `;
+                return null;
+            }
+        }
+        
+        // 콘텐츠 매핑 테스트
+        function testContentMapping() {
+            console.log('콘텐츠 매핑 테스트...');
+            const resultDiv = document.getElementById('result');
+            
+            // 먼저 목업 데이터 생성
+            const mockData = testMockGeneration();
+            if (!mockData) return;
+            
+            try {
+                // 콘텐츠 매퍼로 UI에 적용
+                const success = populateFormWithAIContent(mockData);
+                
+                if (success) {
+                    resultDiv.innerHTML += `
+                        <hr>
+                        <h3>✅ UI 매핑 성공!</h3>
+                        <p>테스트 필드들을 확인해보세요. AI가 생성한 내용이 채워졌습니다.</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML += `
+                        <hr>
+                        <h3>⚠️ UI 매핑 부분 실패</h3>
+                        <p>일부 필드가 매핑되지 않았을 수 있습니다.</p>
+                    `;
+                }
+                
+                // 매핑 상태 확인
+                const status = contentMapper.getMappingStatus();
+                console.log('매핑 상태:', status);
+                
+                resultDiv.innerHTML += `
+                    <p><strong>매핑 완료율:</strong> ${status.completionRate}%</p>
+                    <p><strong>매핑된 필드:</strong> ${status.mappedFields}/${status.totalFields}</p>
+                `;
+                
+            } catch (error) {
+                console.error('매핑 실패:', error);
+                resultDiv.innerHTML += `
+                    <hr>
+                    <h3>❌ 매핑 실패</h3>
+                    <p>에러: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // 전체 플로우 테스트 (목업 데이터 사용)
+        async function testFullFlow() {
+            console.log('전체 플로우 테스트 시작...');
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<h3>🔄 전체 플로우 테스트 진행 중...</h3>';
+            
+            // 테스트 설문 데이터
+            const surveyData = {
+                basic: {
+                    companyName: 'AI 솔루션즈',
+                    industry: '인공지능/빅데이터',
+                    stage: '초기 운영'
+                },
+                business: {
+                    problem: '기업의 AI 도입 장벽이 높음',
+                    solution: '쉽고 빠른 AI 도입 컨설팅 및 솔루션',
+                    targetMarket: '중견기업 및 대기업'
+                },
+                financial: {
+                    fundingNeed: '20억원'
+                },
+                purpose: {
+                    documentPurpose: '투자 유치'
+                }
+            };
+            
+            try {
+                // 1. AI 콘텐츠 생성 (목업)
+                resultDiv.innerHTML += '<p>1️⃣ AI 콘텐츠 생성 중...</p>';
+                const generatedContent = await aiEngine.generateBusinessPlan(surveyData);
+                console.log('생성된 콘텐츠:', generatedContent);
+                
+                // 2. UI에 매핑
+                resultDiv.innerHTML += '<p>2️⃣ UI에 콘텐츠 매핑 중...</p>';
+                const mappingSuccess = populateFormWithAIContent(generatedContent);
+                
+                // 3. 결과 표시
+                if (mappingSuccess) {
+                    resultDiv.innerHTML += `
+                        <hr>
+                        <h3>✅ 전체 플로우 테스트 성공!</h3>
+                        <p>AI가 사업계획서를 성공적으로 생성하고 UI에 적용했습니다.</p>
+                        <h4>생성된 내용 요약:</h4>
+                        <ul>
+                            <li>회사: ${generatedContent.company}</li>
+                            <li>업종: ${surveyData.basic.industry}</li>
+                            <li>필요 자금: ${surveyData.financial.fundingNeed}</li>
+                            <li>문서 용도: ${surveyData.purpose.documentPurpose}</li>
+                        </ul>
+                    `;
+                } else {
+                    throw new Error('UI 매핑 실패');
+                }
+                
+            } catch (error) {
+                console.error('전체 플로우 테스트 실패:', error);
+                resultDiv.innerHTML += `
+                    <hr>
+                    <h3>❌ 테스트 실패</h3>
+                    <p>에러: ${error.message}</p>
+                    <p>콘솔에서 자세한 에러를 확인하세요.</p>
+                `;
+            }
+        }
+        
+        // 페이지 로드 시
+        window.onload = function() {
+            console.log('테스트 페이지 준비 완료');
+            console.log('AI 엔진:', aiEngine);
+            console.log('콘텐츠 매퍼:', contentMapper);
+        };
+    </script>
+</body>
+</html>

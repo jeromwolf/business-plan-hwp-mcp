@@ -38,16 +38,16 @@ class AIEngine {
     async generateBusinessPlan(surveyData) {
         if (!this.apiKey) {
             // API 키가 없으면 목업 데이터 반환 (개발/테스트용)
-            return this.generateMockData(surveyData);
+            return this.generateMockDataV2(surveyData);
         }
 
         try {
-            const sections = await this.generateAllSections(surveyData);
-            return this.structureBusinessPlan(surveyData, sections);
+            const sections = await this.generateAllSectionsV2(surveyData);
+            return this.structureBusinessPlanV2(surveyData, sections);
         } catch (error) {
             console.error('AI 생성 오류:', error);
             // 오류 발생 시 목업 데이터 반환
-            return this.generateMockData(surveyData);
+            return this.generateMockDataV2(surveyData);
         }
     }
 
@@ -400,6 +400,313 @@ ${surveyData.business?.solution || '혁신적인 솔루션'}을 제공합니다.
         };
 
         return mockContents[sectionType] || `[${sectionType}] 섹션 내용이 생성됩니다.`;
+    }
+    
+    /**
+     * V2: 5개 섹션 생성
+     */
+    async generateAllSectionsV2(surveyData) {
+        const sections = {};
+        
+        // 5개 섹션 생성
+        const sectionPromises = [
+            this.generateSectionV2('section1', surveyData),
+            this.generateSectionV2('section2', surveyData),
+            this.generateSectionV2('section3', surveyData),
+            this.generateSectionV2('section4', surveyData),
+            this.generateSectionV2('section5', surveyData)
+        ];
+        
+        const results = await Promise.all(sectionPromises);
+        
+        results.forEach((content, index) => {
+            sections[`section${index + 1}`] = content;
+        });
+        
+        return sections;
+    }
+    
+    /**
+     * V2: 개별 섹션 생성
+     */
+    async generateSectionV2(sectionType, surveyData) {
+        const prompt = this.buildSectionPromptV2(sectionType, surveyData);
+        
+        if (!this.apiKey) {
+            return this.getMockSectionContentV2(sectionType, surveyData);
+        }
+        
+        try {
+            const response = await this.callGeminiAPI(prompt);
+            return this.parseAIResponse(response);
+        } catch (error) {
+            console.error(`섹션 생성 실패 (${sectionType}):`, error);
+            return this.getMockSectionContentV2(sectionType, surveyData);
+        }
+    }
+    
+    /**
+     * V2: 섹션별 프롬프트 생성
+     */
+    buildSectionPromptV2(sectionType, surveyData) {
+        const systemPrompt = `당신은 한국의 사업계획서 작성 전문가입니다. 
+제공된 정보를 바탕으로 전문적이고 상세한 사업계획서 섹션을 작성해주세요.
+구체적인 내용과 실제적인 계획을 포함해주세요.`;
+        
+        let userPrompt = '';
+        
+        switch(sectionType) {
+            case 'section1':
+                const s1 = surveyData.section1_overview || {};
+                userPrompt = `다음 정보로 '사업 개요' 섹션을 상세히 작성해주세요:
+- 회사명: ${s1.companyName}
+- 사업 아이템: ${s1.businessItem}
+- 대표자: ${s1.ceoName}
+- 설립일: ${s1.foundedDate}
+- 사업 목표: ${s1.businessGoal}
+
+포함할 내용:
+1. 회사 소개 및 설립 배경
+2. 사업 아이템 상세 설명
+3. 비전과 미션
+4. 핵심 가치
+5. 주요 연혁 및 계획`;
+                break;
+                
+            case 'section2':
+                const s2 = surveyData.section2_market || {};
+                userPrompt = `다음 정보로 '시장 분석' 섹션을 상세히 작성해주세요:
+- 목표 시장: ${s2.targetMarket}
+- 시장 성장률: ${s2.marketGrowth}
+- 경쟁사: ${s2.competitors}
+- 경쟁 우위: ${s2.competitiveAdvantage}
+
+포함할 내용:
+1. 시장 규모와 성장성 분석
+2. 목표 고객 세분화
+3. 경쟁사 상세 분석
+4. SWOT 분석
+5. 시장 진입 전략`;
+                break;
+                
+            case 'section3':
+                const s3 = surveyData.section3_product || {};
+                userPrompt = `다음 정보로 '제품/서비스' 섹션을 상세히 작성해주세요:
+- 주요 제품: ${s3.mainProduct}
+- 핵심 기능: ${s3.productFeatures}
+- 핵심 기술: ${s3.technology}
+- 가격 정책: ${s3.pricing}
+
+포함할 내용:
+1. 제품/서비스 상세 설명
+2. 핵심 기능과 차별화 요소
+3. 기술적 우위
+4. 개발 로드맵
+5. 가격 전략과 수익 구조`;
+                break;
+                
+            case 'section4':
+                const s4 = surveyData.section4_marketing || {};
+                userPrompt = `다음 정보로 '마케팅 전략' 섹션을 상세히 작성해주세요:
+- 타겟 고객: ${s4.targetCustomer}
+- 마케팅 채널: ${s4.marketingChannels}
+- 판매 전략: ${s4.salesStrategy}
+- 고객 확보: ${s4.customerAcquisition}
+
+포함할 내용:
+1. 타겟 고객 상세 분석
+2. 브랜드 포지셔닝
+3. 마케팅 믹스 (4P)
+4. 온/오프라인 마케팅 전략
+5. 고객 유지 및 확대 전략`;
+                break;
+                
+            case 'section5':
+                const s5 = surveyData.section5_financial || {};
+                userPrompt = `다음 정보로 '재무 계획' 섹션을 상세히 작성해주세요:
+- 초기 투자금: ${s5.initialInvestment}
+- 수익 모델: ${s5.revenueModel}
+- 1차년도 매출: ${s5.year1Revenue}
+- 2차년도 매출: ${s5.year2Revenue}
+- 3차년도 매출: ${s5.year3Revenue}
+- 손익분기점: ${s5.breakEven}
+
+포함할 내용:
+1. 자금 조달 계획
+2. 3개년 매출 계획 상세
+3. 비용 구조 분석
+4. 손익 계산서
+5. 투자 회수 계획`;
+                break;
+        }
+        
+        return {
+            system: systemPrompt,
+            user: userPrompt
+        };
+    }
+    
+    /**
+     * V2: 사업계획서 구조화
+     */
+    structureBusinessPlanV2(surveyData, sections) {
+        const s1 = surveyData.section1_overview || {};
+        
+        return {
+            // 기본 정보
+            companyName: s1.companyName || '회사명',
+            ceoName: s1.ceoName || '대표자',
+            foundedDate: s1.foundedDate || '2024년',
+            businessItem: s1.businessItem || '사업 아이템',
+            
+            // 5개 섹션 콘텐츠
+            sections: {
+                section1: sections.section1 || '',
+                section2: sections.section2 || '',
+                section3: sections.section3 || '',
+                section4: sections.section4 || '',
+                section5: sections.section5 || ''
+            },
+            
+            // 메타 정보
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                surveyData: surveyData,
+                aiModel: this.model
+            }
+        };
+    }
+    
+    /**
+     * V2: 목업 데이터 생성
+     */
+    generateMockDataV2(surveyData) {
+        const s1 = surveyData.section1_overview || {};
+        const s2 = surveyData.section2_market || {};
+        const s3 = surveyData.section3_product || {};
+        const s4 = surveyData.section4_marketing || {};
+        const s5 = surveyData.section5_financial || {};
+        
+        return {
+            companyName: s1.companyName || '테스트 회사',
+            ceoName: s1.ceoName || '김철수',
+            foundedDate: s1.foundedDate || '2024년 1월',
+            businessItem: s1.businessItem || 'AI 솔루션',
+            
+            sections: {
+                section1: this.getMockSectionContentV2('section1', surveyData),
+                section2: this.getMockSectionContentV2('section2', surveyData),
+                section3: this.getMockSectionContentV2('section3', surveyData),
+                section4: this.getMockSectionContentV2('section4', surveyData),
+                section5: this.getMockSectionContentV2('section5', surveyData)
+            },
+            
+            metadata: {
+                generatedAt: new Date().toISOString(),
+                surveyData: surveyData,
+                aiModel: 'mock'
+            }
+        };
+    }
+    
+    /**
+     * V2: 섹션별 목업 콘텐츠
+     */
+    getMockSectionContentV2(sectionType, surveyData) {
+        const mockContents = {
+            section1: `[사업 개요]
+회사명: ${surveyData.section1_overview?.companyName || '(주)테크이노베이션'}
+대표자: ${surveyData.section1_overview?.ceoName || '김철수'}
+설립일: ${surveyData.section1_overview?.foundedDate || '2024년 1월'}
+사업 아이템: ${surveyData.section1_overview?.businessItem || 'AI 기반 스마트팜 솔루션'}
+
+1. 회사 소개
+${surveyData.section1_overview?.companyName || '(주)테크이노베이션'}은 최첨단 AI 기술을 활용한 스마트팜 솔루션을 제공하는 농업 기술 전문 기업입니다. 
+${surveyData.section1_overview?.businessGoal || '국내 최고의 AI 농업 솔루션 기업으로 성장'}을 목표로 하고 있습니다.
+
+2. 사업 배경
+농업 인구 감소와 기후 변화로 인한 농업 생산성 저하 문제를 해결하기 위해 설립되었습니다.
+
+3. 핵심 가치
+- 혁신: 최신 AI 기술 적용
+- 신뢰: 농가와의 상생
+- 지속가능성: 친환경 농업 실현`,
+            
+            section2: `[시장 분석]
+목표 시장: ${surveyData.section2_market?.targetMarket || '국내 스마트팜 시장'}
+시장 규모: ${surveyData.section2_market?.marketGrowth || '연평균 15% 성장'}
+
+1. 시장 현황
+${surveyData.section2_market?.targetMarket || '국내 스마트팜 시장은 2023년 기준 약 5조원 규모로 추정되며'}, 
+${surveyData.section2_market?.marketGrowth || '연평균 15% 이상 성장하여 2025년에는 10조원 규모로 확대될 전망입니다'}.
+
+2. 경쟁 환경
+주요 경쟁사: ${surveyData.section2_market?.competitors || 'A사(30%), B사(25%), C사(20%)'}
+우리의 경쟁 우위: ${surveyData.section2_market?.competitiveAdvantage || '특허 기술, 가격 경쟁력, 맞춤형 서비스'}
+
+3. 시장 기회
+- 정부의 스마트팜 육성 정책
+- 청년 농업인 증가
+- ESG 경영 확산`,
+            
+            section3: `[제품/서비스]
+주요 제품: ${surveyData.section3_product?.mainProduct || 'AI 기반 작물 생육 예측 시스템'}
+
+1. 제품 개요
+${surveyData.section3_product?.mainProduct || 'AI 기반 작물 생육 예측 시스템'}은 딥러닝 기술을 활용하여 
+작물의 생육 상태를 실시간으로 모니터링하고 최적의 재배 환경을 제공합니다.
+
+2. 핵심 기능
+${surveyData.section3_product?.productFeatures || '1) 실시간 모니터링 2) 자동 환경 제어 3) 수확량 예측 4) 병해충 조기 진단'}
+
+3. 기술적 우위
+${surveyData.section3_product?.technology || '딥러닝, IoT 센서, 빅데이터 분석'} 기술을 통합하여 
+업계 최고 수준의 정확도(95% 이상)를 달성했습니다.
+
+4. 가격 정책
+${surveyData.section3_product?.pricing || '월 구독료 50만원, 초기 설치비 500만원'}`,
+            
+            section4: `[마케팅 전략]
+타겟 고객: ${surveyData.section4_marketing?.targetCustomer || '중대형 스마트팜 운영 농가'}
+
+1. 목표 고객
+${surveyData.section4_marketing?.targetCustomer || '중대형 스마트팜 운영 농가 및 농업 법인'}을 주요 타겟으로 설정하였습니다.
+
+2. 마케팅 채널
+${surveyData.section4_marketing?.marketingChannels || 'B2B 직접 영업, 농업 박람회 참가, 온라인 마케팅'}을 통해 
+고객에게 접근할 계획입니다.
+
+3. 판매 전략
+${surveyData.section4_marketing?.salesStrategy || '파트너사 협력, 정부 지원사업 연계'}를 통해 
+초기 시장 진입을 가속화할 예정입니다.
+
+4. 고객 확보
+${surveyData.section4_marketing?.customerAcquisition || '무료 시범 서비스, 얼리어답터 할인'} 등의 
+프로모션을 통해 초기 고객을 확보하겠습니다.`,
+            
+            section5: `[재무 계획]
+필요 투자금: ${surveyData.section5_financial?.initialInvestment || '10억원'}
+
+1. 자금 조달 계획
+초기 투자금 ${surveyData.section5_financial?.initialInvestment || '10억원'}은 
+시드 투자(5억원) + 정부 지원금(3억원) + 자체 자금(2억원)으로 조달 예정입니다.
+
+2. 매출 계획
+- 1차년도: ${surveyData.section5_financial?.year1Revenue || '5억원'}
+- 2차년도: ${surveyData.section5_financial?.year2Revenue || '15억원'}
+- 3차년도: ${surveyData.section5_financial?.year3Revenue || '30억원'}
+
+3. 수익 구조
+${surveyData.section5_financial?.revenueModel || 'SaaS 구독료(70%), 설치/유지보수(20%), 컨설팅(10%)'}
+
+4. 손익분기점
+${surveyData.section5_financial?.breakEven || '2차년도 하반기'} 달성 예정
+
+5. 투자 회수
+3년 내 투자금 전액 회수 및 영업이익률 20% 달성 목표`
+        };
+        
+        return mockContents[sectionType] || `[${sectionType}] 섹션 내용`;
     }
 }
 

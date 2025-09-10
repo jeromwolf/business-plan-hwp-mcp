@@ -7,12 +7,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- AI 자동화 모듈 -->
-    <script src="js/survey-system.js"></script>
+    <!-- AI 자동화 모듈 V2 -->
+    <script src="js/survey-system-v2.js"></script>
     <script src="js/ai-engine.js"></script>
-    <script src="templates/prompts.js"></script>
-    <script src="js/content-mapper.js"></script>
-    <script src="js/ai-automation.js"></script>
+    <script src="js/content-mapper-v2.js"></script>
+    <script src="js/ai-automation-v2.js"></script>
     <link rel="stylesheet" href="css/ai-components.css">
     <style>
         * {
@@ -1989,13 +1988,13 @@ ${processedHtml}
             document.getElementById('main-screen').style.display = 'block';
         }
         
-        // API 키 확인 후 AI 모드 시작
+        // API 키 확인 후 AI 모드 V2 시작
         function checkApiKeyAndStart() {
             // API 키 확인
             if (!aiEngine.loadApiKey()) {
                 showApiKeyModal(true); // 필수로 입력받기
             } else {
-                startAIMode();
+                startAIModeV2();
             }
         }
         
@@ -2099,7 +2098,7 @@ ${processedHtml}
             
             // 필수 입력인 경우 AI 모드 시작
             if (required) {
-                startAIMode();
+                startAIModeV2();
             }
         }
         
@@ -2111,8 +2110,8 @@ ${processedHtml}
             }
         }
         
-        // startAIMode는 ai-automation.js에 정의됨
-        // populateFormWithAIContent는 content-mapper.js에 정의됨
+        // startAIModeV2는 ai-automation-v2.js에 정의됨
+        // populateFormWithAIContentV2는 content-mapper-v2.js에 정의됨
     </script>
     </div> <!-- main-screen 닫기 -->
 </body>

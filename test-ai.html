@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 엔진 테스트</title>
+    <script src="js/ai-engine.js"></script>
+    <script src="templates/prompts.js"></script>
+</head>
+<body>
+    <h1>AI 엔진 테스트</h1>
+    <button onclick="testAPI()">API 테스트</button>
+    <button onclick="testMockData()">목업 데이터 테스트</button>
+    <div id="result"></div>
+    
+    <script>
+        // API 키 설정 (테스트용)
+        function setTestApiKey() {
+            const apiKey = prompt('Gemini API 키를 입력하세요:');
+            if (apiKey) {
+                aiEngine.setApiKey(apiKey);
+                alert('API 키 설정 완료');
+            }
+        }
+        
+        // API 테스트
+        async function testAPI() {
+            console.log('API 테스트 시작...');
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // 테스트 프롬프트
+                const testPrompt = {
+                    system: '당신은 테스트 도우미입니다.',
+                    user: '간단히 "안녕하세요"라고 답해주세요.'
+                };
+                
+                resultDiv.innerHTML = '<p>API 호출 중...</p>';
+                
+                // API 호출
+                const response = await aiEngine.callGeminiAPI(testPrompt);
+                console.log('API 응답:', response);
+                
+                // 응답 파싱
+                const text = aiEngine.parseAIResponse(response);
+                
+                resultDiv.innerHTML = `
+                    <h3>성공!</h3>
+                    <p>응답: ${text}</p>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('API 테스트 실패:', error);
+                resultDiv.innerHTML = `
+                    <h3 style="color: red;">실패</h3>
+                    <p>에러: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // 목업 데이터 테스트
+        async function testMockData() {
+            console.log('목업 데이터 테스트 시작...');
+            const resultDiv = document.getElementById('result');
+            
+            const testSurveyData = {
+                basic: {
+                    companyName: '테스트 회사',
+                    industry: 'IT/소프트웨어',
+                    stage: '초기 단계'
+                },
+                business: {
+                    problem: '업무 효율성 문제',
+                    solution: 'AI 자동화 솔루션',
+                    targetMarket: '중소기업'
+                },
+                financial: {
+                    fundingNeed: '5억원'
+                }
+            };
+            
+            try {
+                resultDiv.innerHTML = '<p>목업 데이터 생성 중...</p>';
+                
+                // 목업 데이터 생성
+                const mockData = aiEngine.generateMockData(testSurveyData);
+                console.log('목업 데이터:', mockData);
+                
+                resultDiv.innerHTML = `
+                    <h3>목업 데이터 생성 성공!</h3>
+                    <p>회사명: ${mockData.company}</p>
+                    <p>대표: ${mockData.ceo}</p>
+                    <p>설립일: ${mockData.establishDate}</p>
+                    <h4>섹션 미리보기:</h4>
+                    <p>${mockData.sections.executive_summary.substring(0, 100)}...</p>
+                `;
+                
+            } catch (error) {
+                console.error('목업 테스트 실패:', error);
+                resultDiv.innerHTML = `
+                    <h3 style="color: red;">실패</h3>
+                    <p>에러: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // 페이지 로드 시 API 키 확인
+        window.onload = function() {
+            if (!aiEngine.loadApiKey()) {
+                if (confirm('API 키가 설정되지 않았습니다. 지금 설정하시겠습니까?')) {
+                    setTestApiKey();
+                }
+            } else {
+                console.log('API 키 로드 완료');
+            }
+        };
+    </script>
+</body>
+</html>
