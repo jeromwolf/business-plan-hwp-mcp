@@ -1247,15 +1247,24 @@
         function processHtmlForDownload(html, isDocx = false, isHwp = false) {
             let processedHtml = html;
             
-            // HWP용 처리: base64 이미지를 텍스트로 대체
+            // HWP용 처리: 이미지 처리 방식 개선
             if (isHwp) {
-                // base64 이미지를 플레이스홀더로 대체
-                processedHtml = processedHtml.replace(/<img[^>]*src="data:image\/[^"]*"[^>]*alt="([^"]*)"[^>]*>/gi, 
-                    '<p style="border: 1px dashed #999; padding: 20px; text-align: center; background: #f5f5f5;">[이미지: $1]</p>');
-                
-                // alt 속성이 없는 이미지 처리
-                processedHtml = processedHtml.replace(/<img[^>]*src="data:image\/[^"]*"[^>]*>/gi, 
-                    '<p style="border: 1px dashed #999; padding: 20px; text-align: center; background: #f5f5f5;">[이미지]</p>');
+                // 방법 1: 이미지를 그대로 유지하되 크기만 조정
+                // base64 형식을 유지하면서 한글이 인식할 수 있도록 처리
+                processedHtml = processedHtml.replace(/<img([^>]*?)>/gi, (match) => {
+                    // width, height 속성 제거하고 스타일로만 크기 제어
+                    let newImg = match
+                        .replace(/width="[^"]*"/gi, '')
+                        .replace(/height="[^"]*"/gi, '')
+                        .replace(/style="[^"]*"/gi, '');
+                    
+                    // 스타일 추가
+                    if (newImg.includes('src=')) {
+                        newImg = newImg.replace(/>$/, ' style="max-width:450px; height:auto;">');
+                    }
+                    
+                    return newImg;
+                });
                 
                 return processedHtml;
             }
@@ -1290,19 +1299,11 @@
                 return;
             }
             
-            // 이미지 포함 여부 확인
+            // 이미지 포함 여부 확인 및 안내
             const hasImages = generatedDocument.html.includes('data:image');
             
             if (hasImages) {
-                const proceed = confirm(
-                    '⚠️ 이미지 포함 안내\n\n' +
-                    '문서에 이미지가 포함되어 있습니다.\n' +
-                    '한글 호환성을 위해 이미지는 [이미지] 텍스트로 대체됩니다.\n\n' +
-                    '계속하시겠습니까?\n\n' +
-                    '※ 이미지를 포함하려면 DOCX 다운로드를 사용하세요.'
-                );
-                
-                if (!proceed) return;
+                showToast('이미지가 포함된 문서입니다. 한글 호환 형식으로 변환 중...', 'info');
             }
             
             showToast('한글 호환 파일 생성 중...', 'info');
