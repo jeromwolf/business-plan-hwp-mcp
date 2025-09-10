@@ -103,41 +103,6 @@
             gap: 8px;
         }
         
-        .template-card {
-            padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-            margin-bottom: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .template-card:hover, .template-card.active {
-            border-color: #667eea;
-            background: #f0f4ff;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
-        }
-        
-        .template-card.active::after {
-            content: '✓';
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #667eea;
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        
         .input-field {
             width: 100%;
             padding: 12px;
@@ -475,26 +440,7 @@
         <div class="main-layout">
             <!-- 좌측 패널: 설정 및 입력 -->
             <div class="left-panel">
-                <!-- 1. 템플릿 선택 -->
-                <div class="section">
-                    <h3>📋 사업계획서 템플릿</h3>
-                    <div class="template-selector">
-                        <div class="template-card active" data-template="government">
-                            <h4>정부지원사업</h4>
-                            <p>중소벤처기업부, K-스타트업 등 정부지원사업 신청용</p>
-                        </div>
-                        <div class="template-card" data-template="vc">
-                            <h4>VC 투자 유치</h4>
-                            <p>벤처캐피털 투자 유치를 위한 사업계획서</p>
-                        </div>
-                        <div class="template-card" data-template="bank">
-                            <h4>은행 대출</h4>
-                            <p>창업지원금, 사업자금 대출 신청용</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 2. 기본 정보 입력 -->
+                <!-- 기본 정보 입력 -->
                 <div class="section">
                     <h3>🏢 기본 정보</h3>
                     <input type="text" id="companyName" class="input-field" placeholder="회사명">
@@ -723,15 +669,6 @@
             return converted;
         }
         
-        // 템플릿 선택
-        document.querySelectorAll('.template-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-                showToast('템플릿이 변경되었습니다', 'success');
-            });
-        });
-        
         // 탭 전환
         function switchTab(event, tabName) {
             // 모든 탭 비활성화
@@ -759,7 +696,7 @@
         function generateLivePreview() {
             // 현재 입력 데이터 수집
             const data = {
-                template: document.querySelector('.template-card.active').dataset.template,
+                template: 'government',
                 company: document.getElementById('companyName').value || '회사명을 입력하세요',
                 businessItem: document.getElementById('businessItem').value || '사업 아이템을 입력하세요',
                 ceo: document.getElementById('ceoName').value || '대표자명을 입력하세요',
@@ -928,7 +865,7 @@
             
             // 입력 데이터 수집
             const data = {
-                template: document.querySelector('.template-card.active').dataset.template,
+                template: 'government',
                 company: document.getElementById('companyName').value,
                 businessItem: document.getElementById('businessItem').value,
                 ceo: document.getElementById('ceoName').value,
