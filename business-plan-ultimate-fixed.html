@@ -471,11 +471,11 @@
                     <button class="btn" id="generateBtn" onclick="generateBusinessPlan()">
                         🚀 사업계획서 생성하기
                     </button>
-                    <button class="btn btn-success" id="downloadHwpBtn" onclick="downloadHWP()" disabled>
-                        📄 HWP 다운로드
+                    <button class="btn btn-primary" id="downloadDocxBtn" onclick="downloadDOCX()" disabled>
+                        📝 한글/Word 다운로드 (권장)
                     </button>
-                    <button class="btn btn-warning" id="downloadDocxBtn" onclick="downloadDOCX()" disabled>
-                        📝 DOCX 다운로드
+                    <button class="btn btn-secondary" id="downloadHwpBtn" onclick="downloadHWP()" disabled>
+                        📄 HWP 호환 (이미지 제외)
                     </button>
                     <button class="btn btn-danger" id="downloadPdfBtn" onclick="downloadPDF()" disabled>
                         📑 PDF 다운로드
@@ -1247,24 +1247,15 @@
         function processHtmlForDownload(html, isDocx = false, isHwp = false) {
             let processedHtml = html;
             
-            // HWP용 처리: 이미지 처리 방식 개선
+            // HWP용 처리: 이미지를 텍스트로 대체 (한글 호환성 문제로 인해)
             if (isHwp) {
-                // 방법 1: 이미지를 그대로 유지하되 크기만 조정
-                // base64 형식을 유지하면서 한글이 인식할 수 있도록 처리
-                processedHtml = processedHtml.replace(/<img([^>]*?)>/gi, (match) => {
-                    // width, height 속성 제거하고 스타일로만 크기 제어
-                    let newImg = match
-                        .replace(/width="[^"]*"/gi, '')
-                        .replace(/height="[^"]*"/gi, '')
-                        .replace(/style="[^"]*"/gi, '');
-                    
-                    // 스타일 추가
-                    if (newImg.includes('src=')) {
-                        newImg = newImg.replace(/>$/, ' style="max-width:450px; height:auto;">');
-                    }
-                    
-                    return newImg;
-                });
+                // 이미지를 설명 텍스트로 대체
+                processedHtml = processedHtml.replace(/<img[^>]*alt="([^"]*?)"[^>]*>/gi, 
+                    '<p style="background:#f0f0f0; padding:15px; border:1px dashed #999; text-align:center; color:#666;">[이미지: $1]</p>');
+                
+                // alt 속성이 없는 이미지
+                processedHtml = processedHtml.replace(/<img[^>]*>/gi, 
+                    '<p style="background:#f0f0f0; padding:15px; border:1px dashed #999; text-align:center; color:#666;">[이미지]</p>');
                 
                 return processedHtml;
             }
@@ -1291,7 +1282,7 @@
             return processedHtml;
         }
         
-        // HWP 다운로드 (한글 호환 HTML 형식)
+        // HWP 다운로드 (텍스트와 표만 포함)
         function downloadHWP() {
             console.log('downloadHWP called', generatedDocument);
             if (!generatedDocument) {
@@ -1299,14 +1290,22 @@
                 return;
             }
             
-            // 이미지 포함 여부 확인 및 안내
+            // 이미지 포함 여부 확인
             const hasImages = generatedDocument.html.includes('data:image');
             
             if (hasImages) {
-                showToast('이미지가 포함된 문서입니다. 한글 호환 형식으로 변환 중...', 'info');
+                const proceed = confirm(
+                    '⚠️ 주의: HWP 호환 형식 제한\n\n' +
+                    '이 형식은 텍스트와 표만 포함됩니다.\n' +
+                    '이미지는 [이미지] 텍스트로 대체됩니다.\n\n' +
+                    '이미지를 포함하려면 "한글/Word 다운로드"를 사용하세요.\n\n' +
+                    '계속하시겠습니까?'
+                );
+                
+                if (!proceed) return;
             }
             
-            showToast('한글 호환 파일 생성 중...', 'info');
+            showToast('HWP 호환 파일 생성 중 (이미지 제외)...', 'info');
             
             // 한글에서 잘 읽히는 HTML 형식으로 생성 (이미지는 플레이스홀더로 대체)
             const processedHtml = processHtmlForDownload(generatedDocument.html, false, true);
@@ -1408,11 +1407,11 @@ ${processedHtml}
             showToast('다운로드 완료! 한글에서 파일을 열어 HWP로 저장하세요.', 'success');
         }
         
-        // DOCX 다운로드 (이미지 크기 자동 조정 적용)
+        // DOCX 다운로드 (이미지 포함 - 한글/Word 모두 호환)
         function downloadDOCX() {
             if (!generatedDocument) return;
             
-            showToast('DOCX 호환 파일 생성 중...', 'info');
+            showToast('한글/Word 호환 파일 생성 중 (이미지 포함)...', 'info');
             
             // 이미지가 포함된 HTML 생성 (DOCX용 이미지 크기 조정 적용)
             const processedHtml = processHtmlForDownload(generatedDocument.html, true, false);
@@ -1478,7 +1477,7 @@ ${processedHtml}
             a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.doc`;
             a.click();
             
-            showToast('DOCX 호환 파일 다운로드 완료! (이미지 크기 자동 조정됨)', 'success');
+            showToast('다운로드 완료! 한글 또는 Word에서 열 수 있습니다.', 'success');
         }
         
         // PDF 다운로드 (인쇄 대화상자 사용)
