@@ -8,7 +8,7 @@ class AIEngine {
         // Gemini API 설정
         this.apiKey = null; // 사용자가 입력하도록 변경 예정
         this.apiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/';
-        this.model = 'gemini-1.0-pro'; // Gemini 1.0 Pro 모델 사용
+        this.model = 'gemini-1.5-flash'; // 최신 Gemini 1.5 Flash 모델 사용
         this.maxTokens = 4000;
     }
 
