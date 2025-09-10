@@ -1244,29 +1244,40 @@
         }
         
         // HTML 다운로드용 처리 함수 (이미지 크기 자동 조정 포함)
-        function processHtmlForDownload(html, isDocx = false) {
-            if (!isDocx) {
-                return html;
-            }
-            
-            // DOCX용 이미지 크기 조정
+        function processHtmlForDownload(html, isDocx = false, isHwp = false) {
             let processedHtml = html;
             
-            // img 태그의 스타일 수정 - 최대 너비 400px로 제한
-            processedHtml = processedHtml.replace(/<img([^>]*?)style="([^"]*?)"([^>]*?)>/gi, (match, before, style, after) => {
-                // 기존 스타일에서 width, height 제거하고 max-width 추가
-                const newStyle = style
-                    .replace(/width:\s*\d+px;?/gi, '')
-                    .replace(/height:\s*\d+px;?/gi, '')
-                    .trim();
+            // HWP용 처리: base64 이미지를 텍스트로 대체
+            if (isHwp) {
+                // base64 이미지를 플레이스홀더로 대체
+                processedHtml = processedHtml.replace(/<img[^>]*src="data:image\/[^"]*"[^>]*alt="([^"]*)"[^>]*>/gi, 
+                    '<p style="border: 1px dashed #999; padding: 20px; text-align: center; background: #f5f5f5;">[이미지: $1]</p>');
                 
-                const finalStyle = newStyle + (newStyle ? '; ' : '') + 'max-width: 400px; height: auto;';
-                return `<img${before}style="${finalStyle}"${after}>`;
-            });
+                // alt 속성이 없는 이미지 처리
+                processedHtml = processedHtml.replace(/<img[^>]*src="data:image\/[^"]*"[^>]*>/gi, 
+                    '<p style="border: 1px dashed #999; padding: 20px; text-align: center; background: #f5f5f5;">[이미지]</p>');
+                
+                return processedHtml;
+            }
             
-            // style 속성이 없는 img 태그에 스타일 추가
-            processedHtml = processedHtml.replace(/<img(?![^>]*style=)([^>]*?)>/gi, 
-                '<img$1 style="max-width: 400px; height: auto;">');
+            // DOCX용 처리: 이미지 크기 조정
+            if (isDocx) {
+                // img 태그의 스타일 수정 - 최대 너비 400px로 제한
+                processedHtml = processedHtml.replace(/<img([^>]*?)style="([^"]*?)"([^>]*?)>/gi, (match, before, style, after) => {
+                    // 기존 스타일에서 width, height 제거하고 max-width 추가
+                    const newStyle = style
+                        .replace(/width:\s*\d+px;?/gi, '')
+                        .replace(/height:\s*\d+px;?/gi, '')
+                        .trim();
+                    
+                    const finalStyle = newStyle + (newStyle ? '; ' : '') + 'max-width: 400px; height: auto;';
+                    return `<img${before}style="${finalStyle}"${after}>`;
+                });
+                
+                // style 속성이 없는 img 태그에 스타일 추가
+                processedHtml = processedHtml.replace(/<img(?![^>]*style=)([^>]*?)>/gi, 
+                    '<img$1 style="max-width: 400px; height: auto;">');
+            }
             
             return processedHtml;
         }
@@ -1279,10 +1290,25 @@
                 return;
             }
             
+            // 이미지 포함 여부 확인
+            const hasImages = generatedDocument.html.includes('data:image');
+            
+            if (hasImages) {
+                const proceed = confirm(
+                    '⚠️ 이미지 포함 안내\n\n' +
+                    '문서에 이미지가 포함되어 있습니다.\n' +
+                    '한글 호환성을 위해 이미지는 [이미지] 텍스트로 대체됩니다.\n\n' +
+                    '계속하시겠습니까?\n\n' +
+                    '※ 이미지를 포함하려면 DOCX 다운로드를 사용하세요.'
+                );
+                
+                if (!proceed) return;
+            }
+            
             showToast('한글 호환 파일 생성 중...', 'info');
             
-            // 한글에서 잘 읽히는 HTML 형식으로 생성
-            const processedHtml = processHtmlForDownload(generatedDocument.html);
+            // 한글에서 잘 읽히는 HTML 형식으로 생성 (이미지는 플레이스홀더로 대체)
+            const processedHtml = processHtmlForDownload(generatedDocument.html, false, true);
             
             // 한글 프로그램이 인식할 수 있는 HTML 구조
             const hwpHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -1388,7 +1414,7 @@ ${processedHtml}
             showToast('DOCX 호환 파일 생성 중...', 'info');
             
             // 이미지가 포함된 HTML 생성 (DOCX용 이미지 크기 조정 적용)
-            const processedHtml = processHtmlForDownload(generatedDocument.html, true);
+            const processedHtml = processHtmlForDownload(generatedDocument.html, true, false);
             
             const docxHtml = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
