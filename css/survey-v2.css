@@ -33,14 +33,14 @@
 
 /* 헤더 */
 .survey-header {
-    padding: 30px;
+    padding: 25px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
 }
 
 .survey-header h2 {
-    margin: 0 0 10px 0;
-    font-size: 24px;
+    margin: 0 0 8px 0;
+    font-size: 20px;
     font-weight: 600;
 }
 
@@ -85,16 +85,16 @@
 }
 
 .section-content h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 8px 0;
     color: #333;
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
 }
 
 .section-desc {
     color: #666;
-    margin: 0 0 25px 0;
-    font-size: 14px;
+    margin: 0 0 20px 0;
+    font-size: 13px;
     line-height: 1.5;
 }
 
@@ -107,17 +107,17 @@
 
 .question-group {
     background: white;
-    padding: 20px;
+    padding: 15px;
     border-radius: 8px;
     border: 1px solid #e9ecef;
 }
 
 .question-label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     color: #495057;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .question-label .required {
@@ -128,8 +128,8 @@
 /* 입력 필드 */
 .survey-input {
     width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e9ecef;
+    padding: 10px 12px;
+    border: 1px solid #dee2e6;
     border-radius: 6px;
     font-size: 14px;
     font-family: inherit;
