@@ -472,7 +472,7 @@
                         🚀 사업계획서 생성하기
                     </button>
                     <button class="btn btn-primary" id="downloadDocxBtn" onclick="downloadDOCX()" disabled>
-                        📝 한글/Word 다운로드 (권장)
+                        📝 DOCX 다운로드 (이미지 포함)
                     </button>
                     <button class="btn btn-secondary" id="downloadHwpBtn" onclick="downloadHWP()" disabled>
                         📄 HWP 호환 (이미지 제외)
@@ -1470,11 +1470,11 @@ ${processedHtml}
 </body>
 </html>`;
             
-            const blob = new Blob([docxHtml], { type: 'application/msword' });
+            const blob = new Blob([docxHtml], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.doc`;
+            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.docx`;
             a.click();
             
             showToast('다운로드 완료! 한글 또는 Word에서 열 수 있습니다.', 'success');
