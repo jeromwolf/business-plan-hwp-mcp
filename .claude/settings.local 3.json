@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/blockmeta/Desktop/blockmeta/project/**)",
+      "WebSearch",
+      "Bash(npm init:*)",
+      "Bash(git init:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git clone:*)",
+      "Bash(npm run test:excel:*)",
+      "Bash(npm run test:encoding:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run lint)",
+      "Bash(tsx:*)",
+      "Bash(npx tsx:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

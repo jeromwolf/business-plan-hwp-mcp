@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사업계획서 생성 테스트</title>
+    <style>
+        body {
+            font-family: -apple-system, 'Malgun Gothic', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #preview {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            min-height: 200px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 사업계획서 간편 생성 도구</h1>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="form-group">
+            <label>회사명</label>
+            <input type="text" id="company" placeholder="예: (주)테크스타트" value="(주)테크스타트">
+        </div>
+        
+        <div class="form-group">
+            <label>사업 아이템</label>
+            <input type="text" id="businessItem" placeholder="예: AI 기반 스마트팜 솔루션" value="AI 기반 스마트팜 솔루션">
+        </div>
+        
+        <div class="form-group">
+            <label>대표자</label>
+            <input type="text" id="ceo" placeholder="예: 김철수" value="김철수">
+        </div>
+        
+        <div class="form-group">
+            <label>템플릿 선택</label>
+            <select id="template">
+                <option value="basic">기본 템플릿</option>
+                <option value="vc">VC 투자용</option>
+                <option value="gov">정부지원사업용</option>
+            </select>
+        </div>
+        
+        <div>
+            <button onclick="generateDoc()">📄 문서 생성</button>
+            <button onclick="downloadHTML()" id="downloadBtn" disabled>💾 HTML 다운로드</button>
+            <button onclick="downloadPDF()" id="pdfBtn" disabled>📑 PDF 저장</button>
+        </div>
+        
+        <div id="preview">
+            <p style="color: #999; text-align: center;">생성된 문서가 여기에 표시됩니다</p>
+        </div>
+    </div>
+    
+    <script>
+        let generatedHTML = '';
+        
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            
+            if (type !== 'error') {
+                setTimeout(() => {
+                    status.className = 'status';
+                }, 3000);
+            }
+        }
+        
+        function generateDoc() {
+            const company = document.getElementById('company').value;
+            const businessItem = document.getElementById('businessItem').value;
+            const ceo = document.getElementById('ceo').value;
+            const template = document.getElementById('template').value;
+            
+            if (!company || !businessItem || !ceo) {
+                showStatus('모든 필드를 입력해주세요!', 'error');
+                return;
+            }
+            
+            showStatus('문서 생성 중...', 'info');
+            
+            // 템플릿별 내용 생성
+            let sections = getTemplateSections(template);
+            
+            generatedHTML = `
+                <h1 style="text-align: center; color: #667eea; padding: 20px 0; border-bottom: 3px solid #667eea;">
+                    ${businessItem} 사업계획서
+                </h1>
+                
+                <div style="margin: 30px 0;">
+                    <h2 style="color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px;">1. 회사 개요</h2>
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <tr>
+                            <th style="background: #f5f5f5; padding: 12px; border: 1px solid #ddd; width: 30%;">회사명</th>
+                            <td style="padding: 12px; border: 1px solid #ddd;">${company}</td>
+                        </tr>
+                        <tr>
+                            <th style="background: #f5f5f5; padding: 12px; border: 1px solid #ddd;">사업 아이템</th>
+                            <td style="padding: 12px; border: 1px solid #ddd;">${businessItem}</td>
+                        </tr>
+                        <tr>
+                            <th style="background: #f5f5f5; padding: 12px; border: 1px solid #ddd;">대표자</th>
+                            <td style="padding: 12px; border: 1px solid #ddd;">${ceo}</td>
+                        </tr>
+                        <tr>
+                            <th style="background: #f5f5f5; padding: 12px; border: 1px solid #ddd;">설립일</th>
+                            <td style="padding: 12px; border: 1px solid #ddd;">2024년 1월 1일</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+            
+            // 섹션 추가
+            sections.forEach((section, index) => {
+                generatedHTML += `
+                    <div style="margin: 30px 0; page-break-inside: avoid;">
+                        <h2 style="color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px;">
+                            ${index + 2}. ${section.title}
+                        </h2>
+                        <div style="padding: 15px; line-height: 1.8;">
+                            ${section.content}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // 미리보기 업데이트
+            document.getElementById('preview').innerHTML = generatedHTML;
+            
+            // 버튼 활성화
+            document.getElementById('downloadBtn').disabled = false;
+            document.getElementById('pdfBtn').disabled = false;
+            
+            showStatus('문서가 성공적으로 생성되었습니다!', 'success');
+        }
+        
+        function getTemplateSections(template) {
+            const templates = {
+                basic: [
+                    {
+                        title: '사업 개요',
+                        content: `<p><strong>사업 목적:</strong> ${document.getElementById('businessItem').value}를 통한 혁신적인 솔루션 제공</p>
+                                 <p><strong>목표 시장:</strong> 국내 B2B 시장을 타겟으로 초기 진입 후 해외 확장</p>
+                                 <p><strong>핵심 가치:</strong> 기술 혁신, 고객 만족, 지속 가능한 성장</p>`
+                    },
+                    {
+                        title: '시장 분석',
+                        content: `<p><strong>시장 규모:</strong> 2025년 기준 약 5조원 규모로 추정</p>
+                                 <p><strong>성장률:</strong> 연평균 15% 성장 예상</p>
+                                 <p><strong>경쟁 현황:</strong> 기존 솔루션 대비 30% 효율성 개선</p>`
+                    },
+                    {
+                        title: '수익 모델',
+                        content: `<p><strong>주요 수익원:</strong></p>
+                                 <ul>
+                                     <li>SaaS 구독 모델 (월 구독료)</li>
+                                     <li>커스터마이징 서비스</li>
+                                     <li>유지보수 및 기술 지원</li>
+                                 </ul>
+                                 <p><strong>예상 매출:</strong> 1년차 10억, 3년차 50억 목표</p>`
+                    }
+                ],
+                vc: [
+                    {
+                        title: '문제 정의 (Problem)',
+                        content: `<p><strong>현재 시장의 문제점:</strong></p>
+                                 <ul>
+                                     <li>기존 솔루션의 높은 비용과 복잡성</li>
+                                     <li>실시간 데이터 처리의 한계</li>
+                                     <li>사용자 경험 부족</li>
+                                 </ul>`
+                    },
+                    {
+                        title: '솔루션 (Solution)',
+                        content: `<p><strong>우리의 해결책:</strong></p>
+                                 <ul>
+                                     <li>AI 기반 자동화로 70% 비용 절감</li>
+                                     <li>클라우드 기반 실시간 처리</li>
+                                     <li>직관적인 UI/UX 설계</li>
+                                 </ul>`
+                    },
+                    {
+                        title: '시장 기회 (Market)',
+                        content: `<p><strong>TAM (Total Addressable Market):</strong> 100조원</p>
+                                 <p><strong>SAM (Serviceable Available Market):</strong> 10조원</p>
+                                 <p><strong>SOM (Serviceable Obtainable Market):</strong> 1조원</p>`
+                    },
+                    {
+                        title: '팀 구성',
+                        content: `<p><strong>핵심 팀원:</strong></p>
+                                 <ul>
+                                     <li>CEO: 15년 업계 경력</li>
+                                     <li>CTO: 구글 출신 AI 전문가</li>
+                                     <li>COO: 스타트업 3회 EXIT 경험</li>
+                                 </ul>`
+                    }
+                ],
+                gov: [
+                    {
+                        title: '사업 필요성',
+                        content: `<p><strong>정책 부합성:</strong> 정부의 디지털 뉴딜 정책과 완벽히 부합</p>
+                                 <p><strong>사회적 가치:</strong> 일자리 창출 및 지역 경제 활성화</p>
+                                 <p><strong>기술 혁신성:</strong> 국내 최초 AI 기반 통합 솔루션</p>`
+                    },
+                    {
+                        title: '사업 추진 계획',
+                        content: `<table style="width: 100%; border-collapse: collapse;">
+                                     <tr>
+                                         <th style="background: #f5f5f5; padding: 10px; border: 1px solid #ddd;">단계</th>
+                                         <th style="background: #f5f5f5; padding: 10px; border: 1px solid #ddd;">기간</th>
+                                         <th style="background: #f5f5f5; padding: 10px; border: 1px solid #ddd;">주요 내용</th>
+                                     </tr>
+                                     <tr>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">1단계</td>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">1~3개월</td>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">기술 개발 및 프로토타입</td>
+                                     </tr>
+                                     <tr>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">2단계</td>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">4~9개월</td>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">파일럿 테스트 및 검증</td>
+                                     </tr>
+                                     <tr>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">3단계</td>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">10~12개월</td>
+                                         <td style="padding: 10px; border: 1px solid #ddd;">상용화 및 시장 진출</td>
+                                     </tr>
+                                 </table>`
+                    },
+                    {
+                        title: '기대 효과',
+                        content: `<p><strong>경제적 효과:</strong></p>
+                                 <ul>
+                                     <li>3년간 누적 매출 100억원</li>
+                                     <li>신규 일자리 50개 창출</li>
+                                     <li>수입 대체 효과 연 20억원</li>
+                                 </ul>
+                                 <p><strong>기술적 효과:</strong></p>
+                                 <ul>
+                                     <li>특허 5건 이상 출원</li>
+                                     <li>국제 표준 인증 획득</li>
+                                 </ul>`
+                    }
+                ]
+            };
+            
+            return templates[template] || templates.basic;
+        }
+        
+        function downloadHTML() {
+            if (!generatedHTML) {
+                showStatus('먼저 문서를 생성해주세요!', 'error');
+                return;
+            }
+            
+            const fullHTML = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사업계획서 - ${document.getElementById('company').value}</title>
+    <style>
+        @page { 
+            size: A4; 
+            margin: 20mm 20mm 20mm 30mm;
+        }
+        body { 
+            font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; 
+            line-height: 1.8; 
+            padding: 20px;
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+        h1 { color: #333; }
+        h2 { color: #555; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f5f5f5; }
+        @media print {
+            body { margin: 0; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    ${generatedHTML}
+</body>
+</html>`;
+            
+            const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `사업계획서_${document.getElementById('company').value}_${new Date().toISOString().slice(0, 10)}.html`;
+            a.click();
+            
+            showStatus('HTML 파일이 다운로드되었습니다!', 'success');
+        }
+        
+        function downloadPDF() {
+            if (!generatedHTML) {
+                showStatus('먼저 문서를 생성해주세요!', 'error');
+                return;
+            }
+            
+            showStatus('PDF 저장을 위해 인쇄 대화상자를 엽니다...', 'info');
+            window.print();
+        }
+    </script>
+</body>
+</html>

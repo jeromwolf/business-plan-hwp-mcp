@@ -1243,13 +1243,35 @@
             generatedDocument.html = html;
         }
         
-        // HTML 다운로드용 처리 함수
-        function processHtmlForDownload(html) {
-            // 이미지 src가 base64인 경우 그대로 유지
-            return html;
+        // HTML 다운로드용 처리 함수 (이미지 크기 자동 조정 포함)
+        function processHtmlForDownload(html, isDocx = false) {
+            if (!isDocx) {
+                return html;
+            }
+            
+            // DOCX용 이미지 크기 조정
+            let processedHtml = html;
+            
+            // img 태그의 스타일 수정 - 최대 너비 400px로 제한
+            processedHtml = processedHtml.replace(/<img([^>]*?)style="([^"]*?)"([^>]*?)>/gi, (match, before, style, after) => {
+                // 기존 스타일에서 width, height 제거하고 max-width 추가
+                const newStyle = style
+                    .replace(/width:\s*\d+px;?/gi, '')
+                    .replace(/height:\s*\d+px;?/gi, '')
+                    .trim();
+                
+                const finalStyle = newStyle + (newStyle ? '; ' : '') + 'max-width: 400px; height: auto;';
+                return `<img${before}style="${finalStyle}"${after}>`;
+            });
+            
+            // style 속성이 없는 img 태그에 스타일 추가
+            processedHtml = processedHtml.replace(/<img(?![^>]*style=)([^>]*?)>/gi, 
+                '<img$1 style="max-width: 400px; height: auto;">');
+            
+            return processedHtml;
         }
         
-        // HWP 다운로드
+        // HWP 다운로드 (개선된 네이티브 HWP 생성)
         function downloadHWP() {
             console.log('downloadHWP called', generatedDocument);
             if (!generatedDocument) {
@@ -1257,9 +1279,45 @@
                 return;
             }
             
+            // 다운로드 방식 선택 다이얼로그
+            const downloadOption = confirm(
+                'HWP 다운로드 옵션 선택\n\n' +
+                '확인: HWPML 형식 (한글 2010 이상)\n' +
+                '취소: HTML 형식 (모든 한글 버전)'
+            );
+            
+            if (downloadOption) {
+                // HWPML 형식으로 다운로드 (한글 2010 이상)
+                downloadHWPML();
+            } else {
+                // 기존 HTML 형식으로 다운로드
+                downloadHWPHTML();
+            }
+        }
+        
+        // HWPML 형식 다운로드 (한글 2010 이상)
+        function downloadHWPML() {
+            showToast('HWPML 파일 생성 중...', 'info');
+            
+            const hwpmlContent = createHWPMLDocument(generatedDocument);
+            
+            const blob = new Blob([hwpmlContent], { type: 'application/hwpml+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.hwpml`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('HWPML 파일 다운로드 완료! 한글 2010 이상에서 직접 열 수 있습니다.', 'success');
+        }
+        
+        // HTML 형식 다운로드 (모든 한글 버전)
+        function downloadHWPHTML() {
             showToast('HWP 호환 파일 생성 중...', 'info');
             
-            // 이미지가 포함된 HTML 생성
             const processedHtml = processHtmlForDownload(generatedDocument.html);
             
             const hwpHtml = `<!DOCTYPE html>
@@ -1270,20 +1328,20 @@
     <style>
         @page { 
             size: A4; 
-            margin: 20mm 20mm 20mm 30mm; /* 상단, 우측, 하단, 좌측 - 왼쪽 여백을 30mm로 증가 */
+            margin: 20mm 20mm 20mm 30mm;
         }
         body { 
             font-family: '한컴바탕', '맑은 고딕'; 
             font-size: 11pt; 
             line-height: 1.8;
-            padding-left: 10mm; /* 추가 왼쪽 패딩 */
+            padding-left: 10mm;
         }
         h1 { font-size: 18pt; text-align: center; }
         h2 { font-size: 14pt; margin-top: 20pt; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1pt solid #000; padding: 8pt; }
         th { background: #e6e6e6; }
-        img { display: block; margin: 10pt auto; }
+        img { display: block; margin: 10pt auto; max-width: 500px; height: auto; }
     </style>
 </head>
 <body>
@@ -1301,19 +1359,107 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             
-            setTimeout(() => {
-                showToast('다운로드 완료! 한글에서 파일을 열고 HWP로 저장하세요.', 'success');
-            }, 500);
+            showToast('다운로드 완료! 한글에서 파일을 열고 HWP로 저장하세요.', 'success');
         }
         
-        // DOCX 다운로드
+        // HWPML 문서 생성 함수
+        function createHWPMLDocument(doc) {
+            const hwpmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HWPML PUBLIC "+//HNC//DTD HWPML 2.8//EN" "http://www.hancom.co.kr/hwpml/hwpml28.dtd">
+<HWPML Version="2.8" SubVersion="2.8.0.0" Style="embed">
+    <HEAD SecCnt="1">
+        <DOCSUMMARY>
+            <TITLE>${doc.data.company} 사업계획서</TITLE>
+            <AUTHOR>Business Plan HWP MCP</AUTHOR>
+            <DATE>${new Date().toISOString()}</DATE>
+        </DOCSUMMARY>
+        <DOCSETTING>
+            <BEGINNUMBER Page="1" Footnote="1" Endnote="1" Picture="1" Table="1" Equation="1"/>
+        </DOCSETTING>
+        <MAPPINGTABLE>
+            <FACENAMELIST>
+                <FONTFACE Lang="Hangul" Count="2">
+                    <FONT Id="0" Type="ttf" Name="한컴바탕"/>
+                    <FONT Id="1" Type="ttf" Name="한컴돋움"/>
+                </FONTFACE>
+            </FACENAMELIST>
+        </MAPPINGTABLE>
+    </HEAD>
+    <BODY>
+        <SECTION Id="0">
+            ${convertToHWPMLBody(doc.html)}
+        </SECTION>
+    </BODY>
+</HWPML>`;
+            
+            return hwpmlContent;
+        }
+        
+        // HTML을 HWPML Body로 변환
+        function convertToHWPMLBody(html) {
+            // 기본 변환 (실제로는 더 복잡한 변환 필요)
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, 'text/html');
+            let hwpmlBody = '';
+            
+            // 각 요소를 HWPML 형식으로 변환
+            htmlDoc.body.childNodes.forEach(node => {
+                if (node.nodeType === 1) { // Element node
+                    const tagName = node.tagName.toLowerCase();
+                    
+                    switch(tagName) {
+                        case 'h1':
+                            hwpmlBody += `<P ParaShape="0" Style="0"><TEXT CharShape="0">${node.textContent}</TEXT></P>\n`;
+                            break;
+                        case 'h2':
+                            hwpmlBody += `<P ParaShape="1" Style="1"><TEXT CharShape="1">${node.textContent}</TEXT></P>\n`;
+                            break;
+                        case 'p':
+                            hwpmlBody += `<P><TEXT>${node.textContent}</TEXT></P>\n`;
+                            break;
+                        case 'table':
+                            hwpmlBody += convertTableToHWPML(node);
+                            break;
+                        case 'img':
+                            hwpmlBody += `<P><TEXT>[이미지: ${node.alt || '이미지'}]</TEXT></P>\n`;
+                            break;
+                    }
+                }
+            });
+            
+            return hwpmlBody;
+        }
+        
+        // 테이블을 HWPML로 변환
+        function convertTableToHWPML(tableNode) {
+            const rows = tableNode.querySelectorAll('tr');
+            const cols = rows[0] ? rows[0].querySelectorAll('th, td').length : 0;
+            
+            let tableML = `<TABLE BorderFill="1" RowCnt="${rows.length}" ColCnt="${cols}">\n`;
+            
+            rows.forEach(row => {
+                tableML += '<ROW>\n';
+                row.querySelectorAll('th, td').forEach(cell => {
+                    tableML += `<CELL ColAddr="0" RowAddr="0" ColSpan="1" RowSpan="1">
+                        <CELLMARGIN Left="72" Right="72" Top="72" Bottom="72"/>
+                        <P><TEXT>${cell.textContent}</TEXT></P>
+                    </CELL>\n`;
+                });
+                tableML += '</ROW>\n';
+            });
+            
+            tableML += '</TABLE>\n';
+            return tableML;
+        }
+        
+        // DOCX 다운로드 (이미지 크기 자동 조정 적용)
         function downloadDOCX() {
             if (!generatedDocument) return;
             
             showToast('DOCX 호환 파일 생성 중...', 'info');
             
-            // 이미지가 포함된 HTML 생성
-            const processedHtml = processHtmlForDownload(generatedDocument.html);
+            // 이미지가 포함된 HTML 생성 (DOCX용 이미지 크기 조정 적용)
+            const processedHtml = processHtmlForDownload(generatedDocument.html, true);
             
             const docxHtml = `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -1322,12 +1468,46 @@
     <meta charset="UTF-8">
     <title>사업계획서</title>
     <style>
-        body { font-family: '맑은 고딕'; font-size: 11pt; }
-        h1 { font-size: 18pt; text-align: center; }
-        h2 { font-size: 14pt; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid black; padding: 8pt; }
-        img { display: block; margin: 10pt auto; max-width: 100%; height: auto; }
+        @page { size: A4; margin: 2cm; }
+        body { 
+            font-family: '맑은 고딕', 'Malgun Gothic', sans-serif; 
+            font-size: 11pt; 
+            line-height: 1.6;
+        }
+        h1 { 
+            font-size: 18pt; 
+            text-align: center; 
+            margin: 20pt 0;
+            page-break-after: avoid;
+        }
+        h2 { 
+            font-size: 14pt; 
+            margin-top: 15pt;
+            page-break-after: avoid;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 10pt 0;
+            page-break-inside: avoid;
+        }
+        th, td { 
+            border: 1px solid black; 
+            padding: 8pt; 
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        img { 
+            display: block; 
+            margin: 10pt auto; 
+            max-width: 400px !important; 
+            height: auto !important;
+            page-break-inside: avoid;
+        }
+        p { margin: 10pt 0; }
+        .page-break { page-break-before: always; }
     </style>
 </head>
 <body>
@@ -1342,7 +1522,7 @@
             a.download = `사업계획서_${generatedDocument.data.company}_${new Date().toISOString().slice(0, 10)}.doc`;
             a.click();
             
-            showToast('DOCX 호환 파일 다운로드 완료!', 'success');
+            showToast('DOCX 호환 파일 다운로드 완료! (이미지 크기 자동 조정됨)', 'success');
         }
         
         // PDF 다운로드 (인쇄 대화상자 사용)

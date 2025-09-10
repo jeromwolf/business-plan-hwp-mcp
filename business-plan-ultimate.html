@@ -1175,6 +1175,11 @@
             content.innerText = newContent;
             documentSections[sectionId] = newContent;
             
+            // generatedDocument가 있으면 sections 업데이트
+            if (generatedDocument) {
+                generatedDocument.sections = documentSections;
+            }
+            
             // 편집 모드 종료
             editor.classList.remove('editing');
             
@@ -1186,7 +1191,7 @@
             // 미리보기 업데이트 - 중요!
             updatePreview();
             
-            // 미리보기 탭으로 자동 전환 (선택사항)
+            // 미리보기 탭으로 자동 전환
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.preview-area').forEach(area => area.style.display = 'none');
             document.querySelector('.tab:first-child').classList.add('active');
@@ -1245,8 +1250,13 @@
             const addButton = container.lastElementChild;
             container.insertBefore(newSection, addButton);
             
-            // documentSections에 추가
+            // documentSections에 추가 (중요!)
             documentSections[sectionCount] = '새 섹션의 내용을 입력하세요.';
+            
+            // generatedDocument가 있으면 sections 업데이트
+            if (generatedDocument) {
+                generatedDocument.sections = documentSections;
+            }
             
             // 바로 편집 모드로 전환
             editSection(sectionCount);
@@ -1587,15 +1597,27 @@
                     </div>
                 `;
             } else {
-                // 편집된 섹션 내용 사용
-                Object.keys(documentSections).forEach(id => {
-                    const sectionTitle = {
-                        1: '사업 개요',
-                        2: '시장 분석',
-                        3: '제품/서비스',
-                        4: '마케팅 전략',
-                        5: '재무 계획'
-                    }[id] || `섹션 ${id}`;
+                // 편집된 섹션 내용 사용 (숫자 순서대로 정렬)
+                const sortedIds = Object.keys(documentSections).sort((a, b) => parseInt(a) - parseInt(b));
+                
+                sortedIds.forEach(id => {
+                    // 섹션 제목 가져오기 (DOM에서 직접 읽기)
+                    const sectionElement = document.querySelector(`[data-section="${id}"] .section-title`);
+                    let sectionTitle = '';
+                    
+                    if (sectionElement) {
+                        // DOM에서 제목 추출 (숫자 제거)
+                        sectionTitle = sectionElement.textContent.replace(/^\d+\.\s*/, '');
+                    } else {
+                        // 기본 제목
+                        sectionTitle = {
+                            1: '사업 개요',
+                            2: '시장 분석',
+                            3: '제품/서비스',
+                            4: '마케팅 전략',
+                            5: '재무 계획'
+                        }[id] || `새 섹션`;
+                    }
                     
                     html += `<h2>${id}. ${sectionTitle}</h2>`;
                     
@@ -1781,15 +1803,25 @@
             // 제목
             content += `<h1>${generatedDocument.data.businessItem} 사업계획서</h1>`;
             
-            // 편집된 섹션 내용 반영
-            Object.keys(documentSections).forEach(id => {
-                const sectionTitle = {
-                    1: '사업 개요',
-                    2: '시장 분석',
-                    3: '제품/서비스',
-                    4: '마케팅 전략',
-                    5: '재무 계획'
-                }[id] || `섹션 ${id}`;
+            // 편집된 섹션 내용 반영 (숫자 순서대로)
+            const sortedIds = Object.keys(documentSections).sort((a, b) => parseInt(a) - parseInt(b));
+            
+            sortedIds.forEach(id => {
+                // 섹션 제목 가져오기
+                const sectionElement = document.querySelector(`[data-section="${id}"] .section-title`);
+                let sectionTitle = '';
+                
+                if (sectionElement) {
+                    sectionTitle = sectionElement.textContent.replace(/^\d+\.\s*/, '');
+                } else {
+                    sectionTitle = {
+                        1: '사업 개요',
+                        2: '시장 분석',
+                        3: '제품/서비스',
+                        4: '마케팅 전략',
+                        5: '재무 계획'
+                    }[id] || `섹션 ${id}`;
+                }
                 
                 content += `<h2>${id}. ${sectionTitle}</h2>`;
                 
